@@ -2,539 +2,238 @@
 
 class Velocity_XmlCreator {
 
+	public static function populate_XML_element_if_array_value_isset($array_key, $element_name, $xml, $parent_element, $array){	
+		if (isset($array[$array_key]) && $array[$array_key] != '') { 
+			$n = $xml->createElement($element_name);
+			$idText = $xml->createTextNode($array[$array_key]);
+			$n->appendChild($idText);
+			$parent_element->appendChild($n);
+		}
+	}
+	
+	public static function populate_XML_element_with_amount_if_array_value_isset($array_key, $element_name, $xml, $parent_element, $array){	
+		if (isset($array[$array_key]) && $array[$array_key] != '') { 
+			$array[$array_key] = number_format($array[$array_key], 2, '.', '');
+			
+			$n = $xml->createElement($element_name);
+			$idText = $xml->createTextNode($array[$array_key]);
+			$n->appendChild($idText);
+			$parent_element->appendChild($n);
+		}
+	}
+
 	/* 
 	 * create verify xml as per the api format .
 	 * @param array $data this array hold "avsData, carddata"
 	 * @return string $xml xml format in string.
 	 */
 	public static function verify_XML($data) {
+		$xml = new DOMDocument("1.0");
 
-	    if ( isset($data['carddata']) && isset($data['avsdata']) ) {
+		$root = $xml->createElement("AuthorizeTransaction");
+
+		$xml->appendChild($root);
+
+		$root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:i', 'http://www.w3.org/2001/XMLSchema-instance');
+		$root->setAttribute('xmlns', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Rest');
+		$root->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'AuthorizeTransaction');
+
+		if (empty($data['amount'])) {
+			$data['amount'] = '0.00';
+		}
 		
-			$xml = new DOMDocument("1.0");
-
-			$root = $xml->createElement("AuthorizeTransaction");
-
-			$xml->appendChild($root);
-
-			$root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:i', 'http://www.w3.org/2001/XMLSchema-instance');
-			$root->setAttribute('xmlns', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Rest');
-			$root->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'AuthorizeTransaction');
-
-			$n = $xml->createElement("ApplicationProfileId");
-			$idText = $xml->createTextNode(Velocity_Processor::$applicationprofileid);
-			$n->appendChild($idText);
-			$root->appendChild($n);
-
-			$n = $xml->createElement("MerchantProfileId");
-			$idText = $xml->createTextNode(Velocity_Processor::$merchantprofileid);
-			$n->appendChild($idText);
-			$root->appendChild($n);
-
-			$n = $xml->createElement("Transaction");
-			$n->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns1', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard');
-			$n->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'ns1:BankcardTransaction');
-			$root->appendChild($n);
-			
-			$n1 = $xml->createElement("ns1:TenderData");
-			$n->appendChild($n1);
-			
-			$n2 = $xml->createElement("ns1:CardData");
-			$n1->appendChild($n2);
-			
-			$n3 = $xml->createElement("ns1:CardType");
-			$idText = $xml->createTextNode($data['carddata']['cardtype']);
-			$n3->appendChild($idText);
-			$n2->appendChild($n3);
-			
-			$n3 = $xml->createElement("ns1:CardholderName");
-			$idText = $xml->createTextNode($data['carddata']['cardowner']);
-			$n3->appendChild($idText);
-			$n2->appendChild($n3);
-
-			$n3 = $xml->createElement("ns1:PAN");
-			$idText = $xml->createTextNode($data['carddata']['pan']);
-			$n3->appendChild($idText);
-			$n2->appendChild($n3);
-
-			$n3 = $xml->createElement("ns1:Expire");
-			$idText = $xml->createTextNode($data['carddata']['expire']);
-			$n3->appendChild($idText);
-			$n2->appendChild($n3);
-			
-			if (isset($data['carddata']['track1data']) && $data['carddata']['track1data'] != '') { // check track1data for authorize method.
-				
-				$n3 = $xml->createElement("ns1:Track1Data");
-				$idText = $xml->createTextNode($data['carddata']['track1data']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-				
-			} else if (isset($data['carddata']['track2data']) && $data['carddata']['track2data'] != '') { // check track2data for authorize method.
-			
-				$n3 = $xml->createElement("ns1:Track2Data");
-				$idText = $xml->createTextNode($data['carddata']['track2data']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-				
-			} else {
-			
-				$n3 = $xml->createElement("ns1:Track1Data");
-				$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-				$n2->appendChild($n3);
-				
-				$n3 = $xml->createElement("ns1:Track2Data");
-				$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-				$n2->appendChild($n3);
-				
-			}
-			
-			$n2 = $xml->createElement("ns1:CardSecurityData");
-			$n1->appendChild($n2);
-			
-			$n3 = $xml->createElement("ns1:AVSData");
-			$n2->appendChild($n3);
-			
-			$n4 = $xml->createElement("ns1:Street");
-			$idText = $xml->createTextNode($data['avsdata']['Street']);
-			$n4->appendChild($idText);
-			$n3->appendChild($n4);
-
-			$n4 = $xml->createElement("ns1:City");
-			$idText = $xml->createTextNode($data['avsdata']['City']);
-			$n4->appendChild($idText);
-			$n3->appendChild($n4);
-
-			$n4 = $xml->createElement("ns1:StateProvince");
-			$idText = $xml->createTextNode($data['avsdata']['StateProvince']);
-			$n4->appendChild($idText);
-			$n3->appendChild($n4);
-
-			$n4 = $xml->createElement("ns1:PostalCode");
-			$idText = $xml->createTextNode($data['avsdata']['PostalCode']);
-			$n4->appendChild($idText);
-			$n3->appendChild($n4);
-
-			$n4 = $xml->createElement("ns1:CountryCode");
-			$idText = $xml->createTextNode($data['avsdata']['Country']);
-			$n4->appendChild($idText);
-			$n3->appendChild($n4);
-			
-			$n4 = $xml->createElement("ns1:Phone");
-			$n4->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n3->appendChild($n4);
-			
-			$n4 = $xml->createElement("ns1:Email");
-			$n4->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n3->appendChild($n4);
-			
-			$n3 = $xml->createElement("ns1:CVDataProvided");
-			$idText = $xml->createTextNode('Provided');
-			$n3->appendChild($idText);
-			$n2->appendChild($n3);
-			
-			$n3 = $xml->createElement("ns1:CVData");
-			$idText = $xml->createTextNode($data['carddata']['cvv']);
-			$n3->appendChild($idText);
-			$n2->appendChild($n3);
-			
-			$n3 = $xml->createElement("ns1:KeySerialNumber");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-			
-			$n3 = $xml->createElement("ns1:PIN");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-			
-			$n3 = $xml->createElement("ns1:IdentificationInformation");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-			
-			$n2 = $xml->createElement("ns1:EcommerceSecurityData");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-			
-			$n1 = $xml->createElement("ns1:TransactionData");
-			$n->appendChild($n1);
-			
-			$n2 = $xml->createElement("ns1:AccountType");
-			$idText = $xml->createTextNode('NotSet');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-			
-			$n2 = $xml->createElement("ns1:EntryMode");
-			$idText = $xml->createTextNode('Keyed');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-			
-			$n2 = $xml->createElement("ns1:IndustryType");
-			$idText = $xml->createTextNode('Ecommerce');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			return $xml;
-		} else {
-			throw new Exception(Velocity_Message::$descriptions['errauthxml']);
-		}	
+		return Velocity_XmlCreator::transaction_XML($xml, $root, $data);
 	}	
+		
+	public static function transaction_XML($xml, $root, $data){
+		if (empty($data['amount'])) {
+			throw new Exception(Velocity_Message::$descriptions['erramtnotset']);	
+		}else{
+			$data['amount'] = number_format($data['amount'], 2, '.', '');
+		}
+		
+		if (empty($data['token']) && empty($data['carddata'])) {
+			throw new Exception(Velocity_Message::$descriptions['errcarddatatokennotset']);	
+		}
+		
+		if ( empty($data['entry_mode']) && (isset($data['carddata']['pan']) || isset($data['token'])) )  {
+			$data['entry_mode'] = 'Keyed';
+		}
+		
+		if ( empty($data['entry_mode']) && isset($data['carddata']['track2data']) )  {
+			$data['entry_mode'] = 'TrackDataFromMSR';
+		}
 			
+		$n = $xml->createElement("ApplicationProfileId");
+		$idText = $xml->createTextNode(Velocity_Processor::$applicationprofileid);
+		$n->appendChild($idText);
+		$root->appendChild($n);
+
+		$n = $xml->createElement("MerchantProfileId");
+		$idText = $xml->createTextNode(Velocity_Processor::$merchantprofileid);
+		$n->appendChild($idText);
+		$root->appendChild($n);
+
+		$n = $xml->createElement("Transaction");
+		$n->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:bcp', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard');
+		$n->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:txn', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
+		$n->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'bcp:BankcardTransaction');
+		
+		$n1 = $xml->createElement("temp");
+		
+		// $n1 = $xml->createElement("ns2:CustomerData");
+		// $n1->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns2', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
+		// $n->appendChild($n1);
+
+		if(	isset($data['billingdata'])	) {	
+			$n2 = $xml->createElement("ns2:BillingData");
+			$n1->appendChild($n2);
+
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('name', "ns2:Name", $xml, $n1, $data['billingdata']);
+			if(isset($data['billingdata']['address'])) { 
+				$n3 = $xml->createElement("ns2:Address");
+				$n2->appendChild($n3);
+		
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('street', "ns2:Street1", $xml, $n3, $data['billingdata']['address']);
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('Street2', "ns2:Street2", $xml, $n3, $data['billingdata']['address']);
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('City', "ns2:City", $xml, $n3, $data['billingdata']['address']);
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('StateProvince', "ns2:StateProvince", $xml, $n3, $data['billingdata']['address']);
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('PostalCode', "ns2:PostalCode", $xml, $n3, $data['billingdata']['address']);
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('Country', "ns2:CountryCode", $xml, $n3, $data['billingdata']['address']);
+			}
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('business_name', "ns2:BusinessName", $xml, $n1, $data['billingdata']);
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('phone', "ns2:Phone", $xml, $n1, $data['billingdata']);
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('fax', "ns2:Fax", $xml, $n1, $data['billingdata']);
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('email', "ns2:Email", $xml, $n1, $data['billingdata']);
+
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('customer_id', "ns2:CustomerId", $xml, $n1, $data);
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('customer_tax_id', "ns2:CustomerTaxId", $xml, $n1, $data);
+		}
+		
+		// $n2 = $xml->createElement("ns2:ShippingData");
+		// $n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
+		// $n1->appendChild($n2);
+
+		if ( isset($data['reportingdata']) ){
+			$n1 = $xml->createElement("ns2:ReportingData");
+			$n->appendChild($n1);
+
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('comment', "ns2:Comment", $xml, $n1, $data['reportingdata']);
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('description', "ns2:Description", $xml, $n1, $data['reportingdata']);
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('reference', "ns2:Reference", $xml, $n1, $data['reportingdata']);
+		}
+	
+		$n1 = $xml->createElement("bcp:TenderData");
+		$n->appendChild($n1);
+
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('token', "txn:PaymentAccountDataToken", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('secure_payment_account_data', "txn:SecurePaymentAccountData", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('encryption_key_id', "txn:EncryptionKeyId", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('swipe_status', "txn:SwipeStatus", $xml, $n1, $data);
+		
+		if ( isset($data['carddata']) ) {
+			$n2 = $xml->createElement("bcp:CardData");
+			$n1->appendChild($n2);
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('cardtype', "bcp:CardType", $xml, $n2, $data['carddata']);
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('pan', "bcp:PAN", $xml, $n2, $data['carddata']);
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('expire', "bcp:Expire", $xml, $n2, $data['carddata']);;
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('track1data', "bcp:Track1Data", $xml, $n2, $data['carddata']);
+			Velocity_XmlCreator::populate_XML_element_if_array_value_isset('track2data', "bcp:Track2Data", $xml, $n2, $data['carddata']);		
+		}
+
+		if (isset($data['avsdata']) || (isset($data['carddata']) && isset($data['cvdata']['cvv']))){
+			$n2 = $xml->createElement("bcp:CardSecurityData");
+			$n1->appendChild($n2);
+
+			if(isset($data['avsdata'])) { // check avsdata for authorize method.  			
+				$avsdataclass = $data['avsdata'];
+				$avsdataarray = array();
+				
+				foreach($avsdataclass as $key => $value) {
+					$avsdataarray[$key] = $value; 
+				}
+				
+				$data['avsdata'] = $avsdataarray;
+				
+				$n3 = $xml->createElement("bcp:AVSData");
+				$n2->appendChild($n3);
+				
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('Street', "bcp:Street", $xml, $n3, $data['avsdata']);			
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('City', "bcp:City", $xml, $n3, $data['avsdata']);
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('StateProvince', "bcp:StateProvince", $xml, $n3, $data['avsdata']);
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('PostalCode', "bcp:PostalCode", $xml, $n3, $data['avsdata']);
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('Country', "bcp:CountryCode", $xml, $n3, $data['avsdata']);	
+			} 
+			
+			if (isset($data['carddata']) && isset($data['carddata']['cvv'])) {
+				$n3 = $xml->createElement("bcp:CVDataProvided");
+				$idText = $xml->createTextNode('Provided');
+				$n3->appendChild($idText);
+				$n2->appendChild($n3);
+				
+				Velocity_XmlCreator::populate_XML_element_if_array_value_isset('cvv', "bcp:CVData", $xml, $n2, $data['carddata']);
+			}
+		}
+		
+		// $n2 = $xml->createElement("bcp:EcommerceSecurityData");
+		// $n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
+		// $n1->appendChild($n2);
+
+		$n1 = $xml->createElement("bcp:TransactionData");
+		$n->appendChild($n1);
+
+		Velocity_XmlCreator::populate_XML_element_with_amount_if_array_value_isset('amount', "txn:Amount", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('currency_code', "txn:CurrencyCode", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('transaction_datetime', "txn:TransactionDateTime", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('campaign_id', "txn:CampaignId", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('txn_reference', "txn:Reference", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('approval_code', "bcp:ApprovalCode", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_with_amount_if_array_value_isset('cash_back_amount', "bcp:CashBackAmount", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('customer_present', "bcp:CustomerPresent", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('employee_id', "bcp:EmployeeId", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('entry_mode', "bcp:EntryMode", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('goods_type', "bcp:GoodsType", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('industry_type', "bcp:IndustryType", $xml, $n1, $data);
+
+		// $n2 = $xml->createElement("bcp:InternetTransactionData");
+		// $n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
+		// $n1->appendChild($n2);
+		
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('invoice_no', "bcp:InvoiceNumber", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('order_id', "bcp:OrderNumber", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('is_partial_shipment', "bcp:IsPartialShipment", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('signature_captured', "bcp:SignatureCaptured", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_with_amount_if_array_value_isset('fee_amount', "bcp:FeeAmount", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('terminal_id', "bcp:TerminalId", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('lane_id', "bcp:LaneId", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_with_amount_if_array_value_isset('tip_amount', "bcp:TipAmount", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('batch_assignment', "bcp:BatchAssignment", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('partial_approval_capable', "bcp:PartialApprovalCapable", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('score_threshold', "bcp:ScoreThreshold", $xml, $n1, $data);
+		Velocity_XmlCreator::populate_XML_element_if_array_value_isset('is_quasi_cash', "bcp:IsQuasiCash", $xml, $n1, $data);
+
+		$root->appendChild($n);
+		
+		return $xml;
+	}
+		
 	/* 
 	 * create authorize xml as per the api format .
 	 * @param array $data this array hold "amount, paymentAccountDataToken, avsData, carddata, invoice no., order no"
 	 * @return string $xml xml format in string.
 	 */
 	public static function auth_XML($data) {
-	  
-	    if (isset($data['amount']) && isset($data['token']) && isset($data['invoice_no']) && isset($data['order_id'])) {
-		
-			$xml = new DOMDocument("1.0");
+		$xml = new DOMDocument("1.0");
 
-			$root = $xml->createElement("AuthorizeTransaction");
+		$root = $xml->createElement("AuthorizeTransaction");
 
-			$xml->appendChild($root);
+		$xml->appendChild($root);
 
-			$root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:i', 'http://www.w3.org/2001/XMLSchema-instance');
-			$root->setAttribute('xmlns', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Rest');
-			$root->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'AuthorizeTransaction');
+		$root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:i', 'http://www.w3.org/2001/XMLSchema-instance');
+		$root->setAttribute('xmlns', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Rest');
+		$root->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'AuthorizeTransaction');
 
-			$n = $xml->createElement("ApplicationProfileId");
-			$idText = $xml->createTextNode(Velocity_Processor::$applicationprofileid);
-			$n->appendChild($idText);
-			$root->appendChild($n);
-
-			$n = $xml->createElement("MerchantProfileId");
-			$idText = $xml->createTextNode(Velocity_Processor::$merchantprofileid);
-			$n->appendChild($idText);
-			$root->appendChild($n);
-
-			$n = $xml->createElement("Transaction");
-			$n->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns1', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard');
-			$n->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'ns1:BankcardTransaction');
-
-			$n1 = $xml->createElement("ns2:CustomerData");
-			$n1->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns2', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n->appendChild($n1);
-
-			$n2 = $xml->createElement("ns2:BillingData");
-			$n1->appendChild($n2);
-
-			$n3 = $xml->createElement("ns2:Name");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			if(isset($data['avsdata']['Street']) && isset($data['avsdata']['City']) && isset($data['avsdata']['StateProvince']) && isset($data['avsdata']['PostalCode']) && isset($data['avsdata']['Country'])) { // check avsdata for authorize method.  
-			
-				$n3 = $xml->createElement("ns2:Address");
-				$n2->appendChild($n3);
-
-				$n4 = $xml->createElement("ns2:Street1");
-				$idText = $xml->createTextNode($data['avsdata']['Street']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:Street2");
-				$n4->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:City");
-				$idText = $xml->createTextNode($data['avsdata']['City']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:StateProvince");
-				$idText = $xml->createTextNode($data['avsdata']['StateProvince']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:PostalCode");
-				$idText = $xml->createTextNode($data['avsdata']['PostalCode']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:CountryCode");
-				$idText = $xml->createTextNode($data['avsdata']['Country']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-			
-			} else { 
-			
-				$n3 = $xml->createElement("ns2:Address");
-				$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-				$n2->appendChild($n3);
-				
-			}
-
-			$n3 = $xml->createElement("ns2:BusinessName");
-			$idText = $xml->createTextNode('MomCorp');
-			$n3->appendChild($idText);
-			$n2->appendChild($n3);
-
-			$n3 = $xml->createElement("ns2:Phone");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			$n3 = $xml->createElement("ns2:Fax");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			$n3 = $xml->createElement("ns2:Email");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			$n2 = $xml->createElement("ns2:CustomerId");
-			$idText = $xml->createTextNode('cust123x');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns2:CustomerTaxId");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns2:ShippingData");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n1 = $xml->createElement("ns3:ReportingData");
-			$n1->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns3', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n->appendChild($n1);
-
-			$n2 = $xml->createElement("ns3:Comment");
-			$idText = $xml->createTextNode('a test comment');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns3:Description");
-			$idText = $xml->createTextNode('a test description');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns3:Reference");
-			$idText = $xml->createTextNode('001');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-		
-			$n1 = $xml->createElement("ns1:TenderData");
-			$n->appendChild($n1);
-
-			if ($data['token'] != '') { //check paymentaccountdatatoken for authorize method.
-				$n2 = $xml->createElement("ns4:PaymentAccountDataToken");
-				$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns4', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-				$idText = $xml->createTextNode($data['token']);
-				$n2->appendChild($idText);
-				$n1->appendChild($n2);
-			} else {
-				$n2 = $xml->createElement("ns4:PaymentAccountDataToken");
-				$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns4', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-				$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-				$n1->appendChild($n2);
-			}
-
-			$n2 = $xml->createElement("ns5:SecurePaymentAccountData");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns5', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns6:EncryptionKeyId");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns6', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns7:SwipeStatus");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns7', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-			
-			/* check card data for authorize method */
-			if ( $data['carddata']['cardtype'] != '' && $data['carddata']['pan'] != '' && $data['carddata']['expire'] != '' && $data['carddata']['cvv'] != '' ) {
-			
-				$n2 = $xml->createElement("ns1:CardData");
-				$n1->appendChild($n2);
-
-				$n3 = $xml->createElement("ns1:CardType");
-				$idText = $xml->createTextNode($data['carddata']['cardtype']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-
-
-				$n3 = $xml->createElement("ns1:PAN");
-				$idText = $xml->createTextNode($data['carddata']['pan']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-
-				$n3 = $xml->createElement("ns1:Expire");
-				$idText = $xml->createTextNode($data['carddata']['expire']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-				
-				$n3 = $xml->createElement("ns1:CVData");
-				$idText = $xml->createTextNode($data['carddata']['cvv']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-
-				if (isset($data['carddata']['track1data']) && $data['carddata']['track1data'] != '') { // check track1data for authorize method.
-				
-					$n3 = $xml->createElement("ns1:Track1Data");
-					$idText = $xml->createTextNode($data['carddata']['track1data']);
-					$n3->appendChild($idText);
-					$n2->appendChild($n3);
-					
-				} else if (isset($data['carddata']['track2data']) && $data['carddata']['track2data'] != '') { // check track2data for authorize method.
-				
-					$n3 = $xml->createElement("ns1:Track2Data");
-					$idText = $xml->createTextNode($data['carddata']['track2data']);
-					$n3->appendChild($idText);
-					$n2->appendChild($n3);
-					
-				} else {
-				
-					$n3 = $xml->createElement("ns1:Track1Data");
-					$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-					$n2->appendChild($n3);
-					
-					$n3 = $xml->createElement("ns1:Track2Data");
-					$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-					$n2->appendChild($n3);
-					
-				}
-			
-			}
-			/* end card data */
-
-			$n2 = $xml->createElement("ns1:EcommerceSecurityData");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n1 = $xml->createElement("ns1:TransactionData");
-			$n->appendChild($n1);
-
-			$n2 = $xml->createElement("ns8:Amount");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns8', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode($data['amount']);
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns9:CurrencyCode");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns9', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode('USD');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns10:TransactionDateTime");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns10', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode('2013-04-03T13:50:16');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns11:CampaignId");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns11', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns12:Reference");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns12', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode('xyt');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:ApprovalCode");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:CashBackAmount");
-			$idText = $xml->createTextNode('0.0');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:CustomerPresent");
-			$idText = $xml->createTextNode('Present');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:EmployeeId");
-			$idText = $xml->createTextNode('11');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:EntryMode");
-			$idText = $xml->createTextNode('Keyed');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:GoodsType");
-			$idText = $xml->createTextNode('NotSet');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:IndustryType");
-			$idText = $xml->createTextNode('Ecommerce');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:InternetTransactionData");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:InvoiceNumber");
-			$idText = $xml->createTextNode($data['invoice_no']);
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:OrderNumber");
-			$idText = $xml->createTextNode($data['order_id']);
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:IsPartialShipment");
-			$idText = $xml->createTextNode('false');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:SignatureCaptured");
-			$idText = $xml->createTextNode('false');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:FeeAmount");
-			$idText = $xml->createTextNode('0.0');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:TerminalId");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:LaneId");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:TipAmount");
-			$idText = $xml->createTextNode('0.0');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:BatchAssignment");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:PartialApprovalCapable");
-			$idText = $xml->createTextNode('NotSet');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:ScoreThreshold");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:IsQuasiCash");
-			$idText = $xml->createTextNode('false');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$root->appendChild($n);
-			
-			return $xml;
-		} else {
-			throw new Exception(Velocity_Message::$descriptions['errauthxml']);
-		}
+		return Velocity_XmlCreator::transaction_XML($xml, $root, $data);
     }
 	
 	/* 
@@ -651,358 +350,17 @@ class Velocity_XmlCreator {
 	 * @return string $xml xml format in string.
 	 */
 	public static function authandcap_XML($data) {
-	
-	    if (isset($data['amount']) && isset($data['token']) && isset($data['invoice_no']) && isset($data['order_id'])) {
-		
-			$xml = new DOMDocument("1.0");
+		$xml = new DOMDocument("1.0");
 
-			$root = $xml->createElement("AuthorizeAndCaptureTransaction");
+		$root = $xml->createElement("AuthorizeAndCaptureTransaction");
 
-			$xml->appendChild($root);
+		$xml->appendChild($root);
 
-			$root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:i', 'http://www.w3.org/2001/XMLSchema-instance');
-			$root->setAttribute('xmlns', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Rest');
-			$root->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'AuthorizeAndCaptureTransaction');
+		$root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:i', 'http://www.w3.org/2001/XMLSchema-instance');
+		$root->setAttribute('xmlns', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Rest');
+		$root->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'AuthorizeAndCaptureTransaction');
 
-			$n = $xml->createElement("ApplicationProfileId");
-			$idText = $xml->createTextNode(Velocity_Processor::$applicationprofileid);
-			$n->appendChild($idText);
-			$root->appendChild($n);
-
-			$n = $xml->createElement("MerchantProfileId");
-			$idText = $xml->createTextNode(Velocity_Processor::$merchantprofileid);
-			$n->appendChild($idText);
-			$root->appendChild($n);
-
-			$n = $xml->createElement("Transaction");
-			$n->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns1', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard');
-			$n->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'ns1:BankcardTransaction');
-
-			$n1 = $xml->createElement("ns2:CustomerData");
-			$n1->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns2', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n->appendChild($n1);
-
-			$n2 = $xml->createElement("ns2:BillingData");
-			$n1->appendChild($n2);
-
-			$n3 = $xml->createElement("ns2:Name");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			if(isset($data['avsdata']['Street']) && isset($data['avsdata']['City']) && isset($data['avsdata']['StateProvince']) && isset($data['avsdata']['PostalCode']) && isset($data['avsdata']['Country'])) { // check avsdata for authandcap method.
-			
-				$n3 = $xml->createElement("ns2:Address");
-				$n2->appendChild($n3);
-
-				$n4 = $xml->createElement("ns2:Street1");
-				$idText = $xml->createTextNode($data['avsdata']['Street']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:Street2");
-				$n4->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:City");
-				$idText = $xml->createTextNode($data['avsdata']['City']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:StateProvince");
-				$idText = $xml->createTextNode($data['avsdata']['StateProvince']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:PostalCode");
-				$idText = $xml->createTextNode($data['avsdata']['PostalCode']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:CountryCode");
-				$idText = $xml->createTextNode($data['avsdata']['Country']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-			
-			} else {
-			
-				$n3 = $xml->createElement("ns2:Address");
-				$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-				$n2->appendChild($n3);
-				
-			}
-
-			$n3 = $xml->createElement("ns2:BusinessName");
-			$idText = $xml->createTextNode('MomCorp');
-			$n3->appendChild($idText);
-			$n2->appendChild($n3);
-
-			$n3 = $xml->createElement("ns2:Phone");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			$n3 = $xml->createElement("ns2:Fax");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			$n3 = $xml->createElement("ns2:Email");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			$n2 = $xml->createElement("ns2:CustomerId");
-			$idText = $xml->createTextNode('cust123x');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns2:CustomerTaxId");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns2:ShippingData");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n1 = $xml->createElement("ns3:ReportingData");
-			$n1->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns3', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n->appendChild($n1);
-
-			$n2 = $xml->createElement("ns3:Comment");
-			$idText = $xml->createTextNode('a test comment');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns3:Description");
-			$idText = $xml->createTextNode('a test description');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns3:Reference");
-			$idText = $xml->createTextNode('001');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-		
-			$n1 = $xml->createElement("ns1:TenderData");
-			$n->appendChild($n1);
-
-			if ($data['token'] != '') { // check PaymentAccountDataToken for authandcap method.
-				$n2 = $xml->createElement("ns4:PaymentAccountDataToken");
-				$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns4', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-				$idText = $xml->createTextNode($data['token']);
-				$n2->appendChild($idText);
-				$n1->appendChild($n2);
-			} else {
-				$n2 = $xml->createElement("ns4:PaymentAccountDataToken");
-				$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns4', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-				$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-				$n1->appendChild($n2);
-			}
-
-			$n2 = $xml->createElement("ns5:SecurePaymentAccountData");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns5', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns6:EncryptionKeyId");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns6', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns7:SwipeStatus");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns7', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-			
-			/*  check card data for authandcap method. */
-			if ( $data['carddata']['cardtype'] != '' && $data['carddata']['pan'] != '' && $data['carddata']['expire'] != '' && $data['carddata']['cvv'] != '' ) {
-			
-				$n2 = $xml->createElement("ns1:CardData");
-				$n1->appendChild($n2);
-
-				$n3 = $xml->createElement("ns1:CardType");
-				$idText = $xml->createTextNode($data['carddata']['cardtype']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-
-
-				$n3 = $xml->createElement("ns1:PAN");
-				$idText = $xml->createTextNode($data['carddata']['pan']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-
-				$n3 = $xml->createElement("ns1:Expire");
-				$idText = $xml->createTextNode($data['carddata']['expire']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-				
-				$n3 = $xml->createElement("ns1:CVData");
-				$idText = $xml->createTextNode($data['carddata']['cvv']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-
-				if (isset($data['carddata']['track1data']) && $data['carddata']['track1data'] != '') { // check track1data for authandcap method.
-				
-					$n3 = $xml->createElement("ns1:Track1Data");
-					$idText = $xml->createTextNode($data['carddata']['track1data']);
-					$n3->appendChild($idText);
-					$n2->appendChild($n3);
-					
-				} else if (isset($data['carddata']['track2data']) && $data['carddata']['track2data'] != '') { // check track1data for authandcap method.
-				
-					$n3 = $xml->createElement("ns1:Track2Data");
-					$idText = $xml->createTextNode($data['carddata']['track2data']);
-					$n3->appendChild($idText);
-					$n2->appendChild($n3);
-					
-				} else {
-				
-					$n3 = $xml->createElement("ns1:Track1Data");
-					$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-					$n2->appendChild($n3);
-					
-					$n3 = $xml->createElement("ns1:Track2Data");
-					$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-					$n2->appendChild($n3);
-					
-				}
-			
-			}
-			/* end card data */
-
-			$n2 = $xml->createElement("ns1:EcommerceSecurityData");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n1 = $xml->createElement("ns1:TransactionData");
-			$n->appendChild($n1);
-
-			$n2 = $xml->createElement("ns8:Amount");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns8', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode($data['amount']);
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns9:CurrencyCode");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns9', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode('USD');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns10:TransactionDateTime");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns10', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode('2013-04-03T13:50:16');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns11:CampaignId");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns11', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns12:Reference");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns12', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode('xyt');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:ApprovalCode");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:CashBackAmount");
-			$idText = $xml->createTextNode('0.0');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:CustomerPresent");
-			$idText = $xml->createTextNode('Present');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:EmployeeId");
-			$idText = $xml->createTextNode('11');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:EntryMode");
-			$idText = $xml->createTextNode('Keyed');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:GoodsType");
-			$idText = $xml->createTextNode('NotSet');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:IndustryType");
-			$idText = $xml->createTextNode('Ecommerce');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:InternetTransactionData");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:InvoiceNumber");
-			$idText = $xml->createTextNode($data['invoice_no']);
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:OrderNumber");
-			$idText = $xml->createTextNode($data['order_id']);
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:IsPartialShipment");
-			$idText = $xml->createTextNode('false');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:SignatureCaptured");
-			$idText = $xml->createTextNode('false');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:FeeAmount");
-			$idText = $xml->createTextNode('0.0');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:TerminalId");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:LaneId");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:TipAmount");
-			$idText = $xml->createTextNode('0.0');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:BatchAssignment");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:PartialApprovalCapable");
-			$idText = $xml->createTextNode('NotSet');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:ScoreThreshold");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:IsQuasiCash");
-			$idText = $xml->createTextNode('false');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$root->appendChild($n);
-			
-			return $xml;
-		} else {
-			throw new Exception(Velocity_Message::$descriptions['errauthncapdataarray']);
-		}
+		return Velocity_XmlCreator::transaction_XML($xml, $root, $data);
     }
 	
 	/* 
@@ -1114,356 +472,16 @@ class Velocity_XmlCreator {
 	 * @return string $xml xml format in string.
 	 */
 	public static function returnunlinked_XML($data){
+		$xml = new DOMDocument("1.0");
 
-		if (isset($data['amount']) && isset($data['token']) && isset($data['invoice_no']) && isset($data['order_id'])) {
-		
-			$xml = new DOMDocument("1.0");
+		$root = $xml->createElement("AuthorizeAndCaptureTransaction");
 
-			$root = $xml->createElement("AuthorizeAndCaptureTransaction");
+		$xml->appendChild($root);
 
-			$xml->appendChild($root);
+		$root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:i', 'http://www.w3.org/2001/XMLSchema-instance');
+		$root->setAttribute('xmlns', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Rest');
+		$root->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'AuthorizeAndCaptureTransaction');
 
-			$root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:i', 'http://www.w3.org/2001/XMLSchema-instance');
-			$root->setAttribute('xmlns', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Rest');
-			$root->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'AuthorizeAndCaptureTransaction');
-
-			$n = $xml->createElement("ApplicationProfileId");
-			$idText = $xml->createTextNode(Velocity_Processor::$applicationprofileid);
-			$n->appendChild($idText);
-			$root->appendChild($n);
-
-			$n = $xml->createElement("MerchantProfileId");
-			$idText = $xml->createTextNode(Velocity_Processor::$merchantprofileid);
-			$n->appendChild($idText);
-			$root->appendChild($n);
-
-			$n = $xml->createElement("Transaction");
-			$n->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns1', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard');
-			$n->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:type', 'ns1:BankcardTransaction');
-
-			$n1 = $xml->createElement("ns2:CustomerData");
-			$n1->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns2', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n->appendChild($n1);
-
-			$n2 = $xml->createElement("ns2:BillingData");
-			$n1->appendChild($n2);
-
-			$n3 = $xml->createElement("ns2:Name");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			if(isset($data['avsdata']['Street']) && isset($data['avsdata']['City']) && isset($data['avsdata']['StateProvince']) && isset($data['avsdata']['PostalCode']) && isset($data['avsdata']['Country'])) { // check avsdata for authorize method.
-			
-				$n3 = $xml->createElement("ns2:Address");
-				$n2->appendChild($n3);
-
-				$n4 = $xml->createElement("ns2:Street1");
-				$idText = $xml->createTextNode($data['avsdata']['Street']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:Street2");
-				$n4->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:City");
-				$idText = $xml->createTextNode($data['avsdata']['City']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:StateProvince");
-				$idText = $xml->createTextNode($data['avsdata']['StateProvince']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:PostalCode");
-				$idText = $xml->createTextNode($data['avsdata']['PostalCode']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-
-				$n4 = $xml->createElement("ns2:CountryCode");
-				$idText = $xml->createTextNode($data['avsdata']['Country']);
-				$n4->appendChild($idText);
-				$n3->appendChild($n4);
-			
-			} else {
-			
-				$n3 = $xml->createElement("ns2:Address");
-				$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-				$n2->appendChild($n3);
-				
-			}
-
-			$n3 = $xml->createElement("ns2:BusinessName");
-			$idText = $xml->createTextNode('MomCorp');
-			$n3->appendChild($idText);
-			$n2->appendChild($n3);
-
-			$n3 = $xml->createElement("ns2:Phone");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			$n3 = $xml->createElement("ns2:Fax");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			$n3 = $xml->createElement("ns2:Email");
-			$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n2->appendChild($n3);
-
-			$n2 = $xml->createElement("ns2:CustomerId");
-			$idText = $xml->createTextNode('cust123x');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns2:CustomerTaxId");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns2:ShippingData");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n1 = $xml->createElement("ns3:ReportingData");
-			$n1->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns3', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n->appendChild($n1);
-
-			$n2 = $xml->createElement("ns3:Comment");
-			$idText = $xml->createTextNode('a test comment');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns3:Description");
-			$idText = $xml->createTextNode('a test description');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns3:Reference");
-			$idText = $xml->createTextNode('001');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-		
-			$n1 = $xml->createElement("ns1:TenderData");
-			$n->appendChild($n1);
-
-			if ($data['token'] != '') { // check PaymentAccountDataToken for returnunlinked method.
-				$n2 = $xml->createElement("ns4:PaymentAccountDataToken");
-				$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns4', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-				$idText = $xml->createTextNode($data['token']);
-				$n2->appendChild($idText);
-				$n1->appendChild($n2);
-			} else {
-				$n2 = $xml->createElement("ns4:PaymentAccountDataToken");
-				$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns4', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-				$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-				$n1->appendChild($n2);
-			}
-
-			$n2 = $xml->createElement("ns5:SecurePaymentAccountData");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns5', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns6:EncryptionKeyId");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns6', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns7:SwipeStatus");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns7', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-			
-			
-			if ( $data['carddata']['cardtype'] != '' && $data['carddata']['pan'] != '' && $data['carddata']['expire'] != '' && $data['carddata']['cvv'] != '' ) { // check card data for returnunlinked method.
-			
-				$n2 = $xml->createElement("ns1:CardData");
-				$n1->appendChild($n2);
-
-				$n3 = $xml->createElement("ns1:CardType");
-				$idText = $xml->createTextNode($data['carddata']['cardtype']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-
-				$n3 = $xml->createElement("ns1:PAN");
-				$idText = $xml->createTextNode($data['carddata']['pan']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-
-				$n3 = $xml->createElement("ns1:Expire");
-				$idText = $xml->createTextNode($data['carddata']['expire']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-				
-				$n3 = $xml->createElement("ns1:CVData");
-				$idText = $xml->createTextNode($data['carddata']['cvv']);
-				$n3->appendChild($idText);
-				$n2->appendChild($n3);
-
-				if (isset($data['carddata']['track1data']) && $data['carddata']['track1data'] != '') { // check track1data for returnunlinked method.
-				
-					$n3 = $xml->createElement("ns1:Track1Data");
-					$idText = $xml->createTextNode($data['carddata']['track1data']);
-					$n3->appendChild($idText);
-					$n2->appendChild($n3);
-					
-				} else if (isset($data['carddata']['track2data']) && $data['carddata']['track2data'] != '') { // check track2data for returnunlinked method.
-				
-					$n3 = $xml->createElement("ns1:Track2Data");
-					$idText = $xml->createTextNode($data['carddata']['track2data']);
-					$n3->appendChild($idText);
-					$n2->appendChild($n3);
-					
-				} else {
-				
-					$n3 = $xml->createElement("ns1:Track1Data");
-					$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-					$n2->appendChild($n3);
-					
-					$n3 = $xml->createElement("ns1:Track2Data");
-					$n3->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-					$n2->appendChild($n3);
-					
-				}
-			
-			}
-			/* end card data */
-
-			$n2 = $xml->createElement("ns1:EcommerceSecurityData");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n1 = $xml->createElement("ns1:TransactionData");
-			$n->appendChild($n1);
-
-			$n2 = $xml->createElement("ns8:Amount");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns8', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode($data['amount']);
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns9:CurrencyCode");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns9', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode('USD');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns10:TransactionDateTime");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns10', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode('2013-04-03T13:50:16');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns11:CampaignId");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns11', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns12:Reference");
-			$n2->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ns12', 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions');
-			$idText = $xml->createTextNode('xyt');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:ApprovalCode");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:CashBackAmount");
-			$idText = $xml->createTextNode('0.0');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:CustomerPresent");
-			$idText = $xml->createTextNode('Present');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:EmployeeId");
-			$idText = $xml->createTextNode('11');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:EntryMode");
-			$idText = $xml->createTextNode('Keyed');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:GoodsType");
-			$idText = $xml->createTextNode('NotSet');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:IndustryType");
-			$idText = $xml->createTextNode('Ecommerce');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:InternetTransactionData");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:InvoiceNumber");
-			$idText = $xml->createTextNode($data['invoice_no']);
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:OrderNumber");
-			$idText = $xml->createTextNode($data['order_id']);
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:IsPartialShipment");
-			$idText = $xml->createTextNode('false');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:SignatureCaptured");
-			$idText = $xml->createTextNode('false');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:FeeAmount");
-			$idText = $xml->createTextNode('0.0');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:TerminalId");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:LaneId");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:TipAmount");
-			$idText = $xml->createTextNode('0.0');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:BatchAssignment");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:PartialApprovalCapable");
-			$idText = $xml->createTextNode('NotSet');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:ScoreThreshold");
-			$n2->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'i:nil', 'true');
-			$n1->appendChild($n2);
-
-			$n2 = $xml->createElement("ns1:IsQuasiCash");
-			$idText = $xml->createTextNode('false');
-			$n2->appendChild($idText);
-			$n1->appendChild($n2);
-
-			$root->appendChild($n);
-			
-			return $xml;
-		} else {
-			throw new Exception(Velocity_Message::$descriptions['errreturnundataarray']);
-		}
-	}		
+		return Velocity_XmlCreator::transaction_XML($xml, $root, $data);
+	}
 }

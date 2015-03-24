@@ -8,7 +8,6 @@ Author: chetu
 Author URI: http://www.chetu.com/
 */
 
-
 // Hook for payment gateway class.
 add_action('plugins_loaded', 'woocommerce_velocity_init', 0);
 define('velocity_imgdir', WP_PLUGIN_URL . "/" . plugin_basename(dirname(__FILE__)) . '/assets/img/');
@@ -16,7 +15,7 @@ define('velocity_imgdir', WP_PLUGIN_URL . "/" . plugin_basename(dirname(__FILE__
 /* 
  * payment gateway method call from above hooks.
  */
-function woocommerce_velocity_init(){
+function woocommerce_velocity_init() {
 	if(!class_exists('WC_Payment_Gateway')) return; // check WC_Payment_Gateway class exist on plugin page or not.
 
     /**
@@ -41,7 +40,6 @@ function woocommerce_velocity_init(){
 				$this->isTestAccount 	= true;            // this for test url.
 				$this->description 		= $this->settings['description']; // description about payment gateway. 
 			} else {
-				
 				$this->merchantprofileid 			= $this->settings['merchantprofileId']; // merchant profile id unique provided by velocity
 				$this->workflowid 		= $this->settings['workflowid']; // workflowid / serviceid default unique provided by velocity
 				$this->isTestAccount 	= false;
@@ -91,51 +89,66 @@ function woocommerce_velocity_init(){
 			require_once 'sdk/Velocity.php';
 			
 			// create SDK object to call the all SDK methods and genrate the sessiontoken.
-			$obj_transaction = new Velocity_Processor($this->identitytoken, $this->applicationprofileid, $this->merchantprofileid, $this->workflowid, $this->isTestAccount);
+			try {
+				$obj_transaction = new Velocity_Processor($this->applicationprofileid, $this->merchantprofileid, $this->workflowid, $this->isTestAccount, $this->identitytoken, null);
+			} catch(Exception $e) {
+				throw new Exception($e->getMessage());
+			}
 			
-			// returnbyid method call for payment refund via transaction_id. 
-			$res_returnbyid = $obj_transaction->returnById( array(
-															  'amount' => $refund_ammount, 
-															  'TransactionId' => $transaction_id
-															  ) 
-														);
-						  
-			global $wpdb;
-			$velocity_transaction_table = $wpdb->prefix . 'velocity_transaction'; // table name which is use to save the transaction data. 
+			try {
 			
-			
-			if (isset($res_returnbyid['BankcardTransactionResponsePro']['StatusCode']) && $res_returnbyid['BankcardTransactionResponsePro']['StatusCode'] == '000' && isset($res_returnbyid['BankcardTransactionResponsePro']['TransactionState']) && ($res_returnbyid['BankcardTransactionResponsePro']['TransactionState'] == 'Returned' || $res_returnbyid['BankcardTransactionResponsePro']['TransactionState'] == 'PartiallyReturned') && isset($res_returnbyid['BankcardTransactionResponsePro']['TransactionId'])) { // check the transaction success or failure.
-			
-			$transaction_id = $res_returnbyid['BankcardTransactionResponsePro']['TransactionId'];
-			$transaction_status = $res_returnbyid['BankcardTransactionResponsePro']['TransactionState'];
-			$order_num = $res_returnbyid['BankcardTransactionResponsePro']['OrderId'];
-			$obj_res = serialize($res_returnbyid);
-			
-				$order = new WC_Order($order_id);
-				$currency = $order->get_order_currency();
-				$order->add_order_note('Your payment refunded successful.<br/>Refunded amount is '.$refund_ammount.$currency, 1);
-				$order->update_status('Refunded');
+				// returnbyid method call for payment refund via transaction_id. 
+				$res_returnbyid = $obj_transaction->returnById( array(
+                                                                                        'amount' => $refund_ammount, 
+                                                                                        'TransactionId' => $transaction_id
+                                                                                        ) 
+                                                                              );	  
+				global $wpdb;
+				$velocity_transaction_table = $wpdb->prefix . 'velocity_transaction'; // table name which is use to save the transaction data. 
 				
-				$wpdb->insert( 
-					$velocity_transaction_table, 
-					array( 
-						'id' => '', 
-						'transaction_id' => $transaction_id,
-						'transaction_status' =>  $transaction_status,
-						'order_id' => $order_num,
-						'response_obj' => $obj_res
-					), 
-					array( 
-						'%d', 
-						'%s',
-						'%s',
-						'%s',		
-						'%s'		
-					) 
-				);
 				
-			} else { // returnbyid transaction failed from gateway then shows this message.
-				throw new Exception('Transaction Failed please contact!, to site admin');
+				if (isset($res_returnbyid['StatusCode']) && $res_returnbyid['StatusCode'] == '000' && isset($res_returnbyid['TransactionState']) && ($res_returnbyid['TransactionState'] == 'Returned' || $res_returnbyid['TransactionState'] == 'PartiallyReturned') && isset($res_returnbyid['TransactionId'])) { // check the transaction success or failure.
+				
+				$transaction_id = $res_returnbyid['TransactionId'];
+				$transaction_status = $res_returnbyid['TransactionState'];
+				$order_num = $res_returnbyid['OrderId'];
+				$obj_res = serialize($res_returnbyid);
+				
+					$order = new WC_Order($order_id);
+					$currency = $order->get_order_currency();
+					$order->add_order_note('Your payment refunded successful.<br/>Refunded amount is '.$refund_ammount.' '.$currency, 1);
+					$order->update_status('Refunded');
+					
+					$wpdb->insert( 
+						$velocity_transaction_table, 
+						array( 
+							'id' => '', 
+							'transaction_id' => $transaction_id,
+							'transaction_status' =>  $transaction_status,
+							'order_id' => $order_num,
+							'response_obj' => $obj_res
+						), 
+						array( 
+							'%d', 
+							'%s',
+							'%s',
+							'%s',		
+							'%s'		
+						) 
+					);
+					
+				} else { 
+                                    // returnbyid transaction failed from gateway then shows this message.
+                                    if (isset ($res_returnbyid['ErrorResponse']['ValidationErrors']['ValidationError']['RuleMessage']))
+                                        throw new Exception($res_returnbyid['ErrorResponse']['ValidationErrors']['ValidationError']['RuleMessage']);
+                                    else if (isset($res_returnbyid['ErrorResponse']['Reason'])) 
+                                        throw new Exception($res_returnbyid['ErrorResponse']['Reason']);
+                                    else
+                                        throw new Exception('Transaction Failed please contact!, to site admin');
+				}
+				
+			} catch(Exception $ex) {
+				throw new Exception($ex->getMessage());
 			}
 		
 		}
@@ -226,8 +239,8 @@ function woocommerce_velocity_init(){
                     <label class="lbs">Card Type</label>
                     <select id="cardtype" class="txt" name="cardtype" >
                     <option value="Visa">Visa</option>
-                    <option value="Master">Master</option>
-					<option value="Discover">Discover</option>
+                    <option value="MasterCard">MasterCard</option>
+                    <option value="Discover">Discover</option>
                     <option value="AmericanExpress">American Express</option>
                     </select>
                 </div>
@@ -256,7 +269,6 @@ function woocommerce_velocity_init(){
                         <option value="12">Dec</option>
                     </select>
                     <select id="cc-exp-year" class="txt" name="exp_year">
-                        <option value="14">2014</option>
                         <option value="15">2015</option>
                         <option value="16">2016</option>
                         <option value="17">2017</option>
@@ -300,37 +312,35 @@ function woocommerce_velocity_init(){
 			require_once 'sdk/Velocity.php';
 			
 			// create SDK object to call the all SDK methods and genrate the sessiontoken.
-			$obj_transaction = new Velocity_Processor($this->identitytoken, $this->applicationprofileid, $this->merchantprofileid, $this->workflowid, $this->isTestAccount);
 			
-			// verify transaction to verify the avsdata and carddata.
-			$res_verify = $obj_transaction->verify(array(  
-													'avsdata' => $avsData, 
-													'carddata' => $cardData
-													)); 
-
-			if( gettype($res_verify) == 'array' && isset($res_verify['BankcardTransactionResponsePro']['StatusCode']) && $res_verify['BankcardTransactionResponsePro']['StatusCode'] == '000' && isset($res_verify['BankcardTransactionResponsePro']['TransactionState']) && $res_verify['BankcardTransactionResponsePro']['TransactionState'] == 'Verified' && isset($res_verify['BankcardTransactionResponsePro']['PaymentAccountDataToken'])) {  // check verify is success or failure
-
-				$paymentAccountDataToken = $res_verify['BankcardTransactionResponsePro']['PaymentAccountDataToken'];
-				
-				// authorizeandcapture method call for payment transaction 
+			try {
+				$obj_transaction = new Velocity_Processor( $this->applicationprofileid, $this->merchantprofileid, $this->workflowid, $this->isTestAccount, $this->identitytoken, null);
+			} catch(Exception $e) {
+				throw new Exception($e->getMessage());
+			} 
+			
+			try {
+			
 				$res_authandcap = $obj_transaction->authorizeAndCapture( array(
-																		'amount' => $total, 
-																		'token' => $paymentAccountDataToken, 
-																		'avsdata' => $avsData, 
-																		'carddata' => array(), 
-																		'invoice_no' => '',
-																		'order_id' => $order_id
-																		)
-																	);
-																
+                                                                                                'amount' => $total, 
+                                                                                                'token' => NULL, 
+                                                                                                'avsdata' => $avsData, 
+                                                                                                'carddata' => $cardData, 
+                                                                                                'invoice_no' => '',
+                                                                                                'order_id' => $order_id
+                                                                                                )
+                                                                                        );
+
 				global $wpdb;
-                $velocity_transaction_table = $wpdb->prefix . 'velocity_transaction'; // table name which is use to save the transaction data. 
+                                $velocity_transaction_table = $wpdb->prefix . 'velocity_transaction'; // table name which is use to save the transaction data. 
 				
 
-				if(isset($res_authandcap['BankcardTransactionResponsePro']['StatusCode']) && $res_authandcap['BankcardTransactionResponsePro']['StatusCode'] == '000' && isset($res_authandcap['BankcardTransactionResponsePro']['TransactionState']) && $res_authandcap['BankcardTransactionResponsePro']['TransactionState'] == 'Captured' && isset($res_authandcap['BankcardTransactionResponsePro']['TransactionId'])) { // check the transaction success or failure.
+				if(isset($res_authandcap['StatusCode']) && $res_authandcap['StatusCode'] == '000' && 
+                                        isset($res_authandcap['TransactionState']) && $res_authandcap['TransactionState'] == 'Captured' && 
+                                        isset($res_authandcap['TransactionId'])) { // check the transaction success or failure.
 			
-				$transaction_id = $res_authandcap['BankcardTransactionResponsePro']['TransactionId'];
-				$transaction_status = $res_authandcap['BankcardTransactionResponsePro']['TransactionState'];
+				$transaction_id = $res_authandcap['TransactionId'];
+				$transaction_status = $res_authandcap['TransactionState'];
 				$obj_res = serialize($res_authandcap);
 				
 					if($order->status !== 'completed') {
@@ -374,14 +384,22 @@ function woocommerce_velocity_init(){
 						'redirect' => $this->get_return_url( $order )
 					);
 					
-				} else { // authorizeandcapture transaction failed from gateway then shows this message.
+                                } else if (isset($res_authandcap['StatusCode']) && $res_authandcap['StatusCode'] == '014') {
+                                    throw new Exception($res_authandcap['StatusMessage']);
+                                } else {
+                                    
+                                    // authorizeandcapture transaction failed from gateway then shows this message.
+                                    if (isset ($res_authandcap['ErrorResponse']['ValidationErrors']['ValidationError']['RuleMessage']))
+                                        throw new Exception($res_authandcap['ErrorResponse']['ValidationErrors']['ValidationError']['RuleMessage']);
+                                    else if (isset($res_authandcap['ErrorResponse']['Reason'])) 
+                                        throw new Exception($res_authandcap['ErrorResponse']['Reason']);
+                                    else
 					throw new Exception('Transaction Failed please contact!, to site admin');
 				}
-				
-			} else { // verify transaction failed from gateway then shows this message.
-				throw new Exception('Verify transaction not successfull, please provide correct data!');
-			}
-
+			} catch (Exception $ex) {
+				throw new Exception($ex->getMessage());
+			}	
+			
 		}
 
 	} // class end

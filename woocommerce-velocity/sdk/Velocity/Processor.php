@@ -10,7 +10,7 @@ class Velocity_Processor
 
 	private $isNew;
 	private $connection;
-	private $sessionToken = '';
+	public $sessionToken ;
 	public $messages = array();
 	public $errors = array();
 	public static $Txn_method = array('verify', 'authorize', 'authorizeandcapture', 'capture', 'adjust', 'undo', 'returnbyid', 'returnunlinked'); // array of method name to identify method request for common process
@@ -20,15 +20,19 @@ class Velocity_Processor
 	public static $workflowid;
 	public static $isTestAccount;
 
-	public function __construct($identitytoken, $applicationprofileid, $merchantprofileid, $workflowid, $isTestAccount) {
+	public function __construct($applicationprofileid, $merchantprofileid, $workflowid, $isTestAccount, $identitytoken = null, $sessiontoken = null ) {
 		$this->connection = Velocity_Connection::instance(); // velocity_connection class object store in private data member $connection. 
 		self::$identitytoken = $identitytoken;
 		self::$applicationprofileid = $applicationprofileid;
 		self::$merchantprofileid = $merchantprofileid;
 		self::$workflowid = $workflowid;
 		self::$isTestAccount = $isTestAccount;
-		$this->sessionToken = $this->connection->signOn();
-	
+		if(empty($sessiontoken) && !empty($identitytoken)){
+			$this->sessionToken = $this->connection->signOn();
+		} else {
+			$this->sessionToken = $sessiontoken; 
+		}
+		
 	}
 
 	/* -- Class Methods -- */
@@ -42,36 +46,31 @@ class Velocity_Processor
 	*/
 	
 	public function verify($options = array()) {
-		if(isset($options['carddata']) && isset($options['avsdata'])) {
 		
-			try { 
-																	
-				$xml = Velocity_XmlCreator::verify_XML($options);  // got Verify xml object.
-				$xml->formatOutput = TRUE;
-				$body = $xml->saveXML();
-				//echo '<xmp>'.$body.'</xmp>'; die;
-				list($error, $response) = $this->connection->post(
-																	$this->path(
-																		self::$workflowid, 
-																		self::$Txn_method[0], 
-																		self::$Txn_method[0]
-																	), 
-																	array(
-																		'sessiontoken' => $this->sessionToken, 
-																		'xml' => $body, 
-																		'method' => self::$Txn_method[0]
-																	)
-																 );
-				return $this->handleResponse($error, $response);
-				//return $response;
-			} catch (Exception $e) {
-				throw new Exception( $e->getMessage() );
-			}
-	
-		} else {
-		    throw new Exception(Velocity_Message::$descriptions['errverftrandata']);
+		try { 
+																
+			$xml = Velocity_XmlCreator::verify_XML($options);  // got Verify xml object.
+			$xml->formatOutput = TRUE;
+			$body = $xml->saveXML();
+			//echo '<xmp>'.$body.'</xmp>'; die;
+			list($error, $response) = $this->connection->post(
+																$this->path(
+																	self::$workflowid, 
+																	self::$Txn_method[0], 
+																	self::$Txn_method[0]
+																), 
+																array(
+																	'sessiontoken' => $this->sessionToken, 
+																	'xml' => $body, 
+																	'method' => self::$Txn_method[0]
+																)
+															 );
+			return $this->handleResponse($error, $response);
+			//return $response;
+		} catch (Exception $e) {
+			throw new Exception( $e->getMessage() );
 		}
-		
+	
 	}
 	
 	/*
@@ -82,37 +81,30 @@ class Velocity_Processor
 	 */
 	public function authorizeAndCapture($options = array()) { 
 
-		if(isset($options['amount']) && isset($options['token'])) {
-			$amount = number_format($options['amount'], 2, '.', '');
-			$options['amount'] = $amount;
-			try {
-			
-				$xml = Velocity_XmlCreator::authandcap_XML($options);  // got authorizeandcapture xml object. 
-				$xml->formatOutput = TRUE;
-				$body = $xml->saveXML();
-				//echo '<xmp>'.$body.'</xmp>';
-				list($error, $response) = $this->connection->post(
-																	$this->path(
-																		self::$workflowid, 
-																		null, 
-																		self::$Txn_method[2]
-																	), 
-																	array(
-																		'sessiontoken' => $this->sessionToken, 
-																		'xml' => $body, 
-																		'method' => self::$Txn_method[2]
-																		)
-																 );
-				return $this->handleResponse($error, $response);
-				//return $response;
-				
-			} catch(Exception $e) {
-				throw new Exception($e->getMessage());
-			}
+		try {
 		
-		} else {
-			throw new Exception(Velocity_Message::$descriptions['erraurhncapavswflid']);
+			$xml = Velocity_XmlCreator::authandcap_XML($options);  // got authorizeandcapture xml object. 
+			$xml->formatOutput = TRUE;
+			$body = $xml->saveXML();
+			//echo '<xmp>'.$body.'</xmp>'; die;
+			list($error, $response) = $this->connection->post(
+																$this->path(
+																	self::$workflowid, 
+																	null, 
+																	self::$Txn_method[2]
+																), 
+																array(
+																	'sessiontoken' => $this->sessionToken, 
+																	'xml' => $body, 
+																	'method' => self::$Txn_method[2]
+																	)
+															 );
+			return $this->handleResponse($error, $response);
+			//return $response;
+		} catch(Exception $e) {
+			throw new Exception($e->getMessage());
 		}
+		
 	}
 	
 	/*
@@ -124,35 +116,30 @@ class Velocity_Processor
 	*/
 	
 	public function authorize($options = array()) {
-		if(isset($options['amount']) && isset($options['token']) && isset($options['avsdata'])) {
-		$amount = number_format($options['amount'], 2, '.', '');
-		$options['amount'] = $amount;
-			try {
-				$xml = Velocity_XmlCreator::auth_XML($options);  // got authorize xml object.
-				$xml->formatOutput = TRUE;
-				$body = $xml->saveXML();
-				//echo '<xmp>'.$body.'</xmp>';
-				list($error, $response) = $this->connection->post(
-																	$this->path(
-																		self::$workflowid, 
-																		null, 
-																		self::$Txn_method[1]
-																	), 
-																	array(
-																		'sessiontoken' => $this->sessionToken, 
-																		'xml' => $body, 
-																		'method' => self::$Txn_method[1]
-																	)
-																 );
-				return $this->handleResponse($error, $response);
-				//return $response;
-			} catch (Exception $e) {
-				throw new Exception( $e->getMessage() );
-			}
-	
-		} else {
-		    throw new Exception(Velocity_Message::$descriptions['errauthtrandata']);
+
+		try {
+			$xml = Velocity_XmlCreator::auth_XML($options);  // got authorize xml object.
+			$xml->formatOutput = TRUE;
+			$body = $xml->saveXML();
+			//echo '<xmp>'.$body.'</xmp>'; die;
+			list($error, $response) = $this->connection->post(
+																$this->path(
+																	self::$workflowid, 
+																	null, 
+																	self::$Txn_method[1]
+																), 
+																array(
+																	'sessiontoken' => $this->sessionToken, 
+																	'xml' => $body, 
+																	'method' => self::$Txn_method[1]
+																)
+															 );
+			return $this->handleResponse($error, $response);
+			//return $response;
+		} catch (Exception $e) {
+			throw new Exception( $e->getMessage() );
 		}
+
 	}
 
 	/*
@@ -270,7 +257,7 @@ class Velocity_Processor
 	
 	
 	/*
-	 * The ReturnById operation is used to perform a linked credit to a cardholder’s account from the merchant’s account based on a
+	 * The ReturnById operation is used to perform a linked credit to a cardholderï¿½s account from the merchantï¿½s account based on a
 	 * previously authorized and settled transaction.
 	 * @param array $options this is hold the transactionid, method name.
 	 * @return array $this->handleResponse($error, $response) array of successfull or failure of gateway response. 
@@ -309,42 +296,36 @@ class Velocity_Processor
 
 	
 	/*
-	 * The ReturnUnlinked operation is used to perform an "unlinked", or standalone, credit to a cardholder’s account from the merchant’s account.
+	 * The ReturnUnlinked operation is used to perform an "unlinked", or standalone, credit to a cardholderï¿½s account from the merchantï¿½s account.
 	 * This operation is useful when a return transaction is not associated with a previously authorized and settled transaction.
 	 * @param array $options this array hold "amount, paymentAccountDataToken, avsData, carddata, invoice no., order no"
 	 * @return array $this->handleResponse($error, $response) array of successfull or failure of gateway response. 
 	 */
 	public function returnUnlinked($options = array()) {
 		
-		if(isset($options['amount']) && isset($options['token'])) {
-			$amount = number_format($options['amount'], 2, '.', '');
-			$options['amount'] = $amount;
-			try {
-				$xml = Velocity_XmlCreator::returnunlinked_XML($options);  // got ReturnById xml object. 
-				$xml->formatOutput = TRUE;
-				$body = $xml->saveXML();
-				//echo '<xmp>'.$body.'</xmp>'; die;
-				list($error, $response) = $this->connection->post(
-																	$this->path(
-																		self::$workflowid, 
-																		null, 
-																		self::$Txn_method[7]
-																	), 
-																	array(
-																		'sessiontoken' =>  $this->sessionToken, 
-																		'xml' => $body, 
-																		'method' => self::$Txn_method[7]
-																	)
-																 );
-				return $this->handleResponse($error, $response);
-				//return $response;
-			} catch (Exception $e) {
-				throw new Exception($e->getMessage());
-			}
-			
-		} else {
-			throw new Exception(Velocity_Message::$descriptions['errreturntranidwid']);
-		}  
+		try {
+			$xml = Velocity_XmlCreator::returnunlinked_XML($options);  // got ReturnById xml object. 
+			$xml->formatOutput = TRUE;
+			$body = $xml->saveXML();
+			//echo '<xmp>'.$body.'</xmp>'; die;
+			list($error, $response) = $this->connection->post(
+																$this->path(
+																	self::$workflowid, 
+																	null, 
+																	self::$Txn_method[7]
+																), 
+																array(
+																	'sessiontoken' =>  $this->sessionToken, 
+																	'xml' => $body, 
+																	'method' => self::$Txn_method[7]
+																)
+															 );
+			return $this->handleResponse($error, $response);
+			//return $response;
+		} catch (Exception $e) {
+			throw new Exception($e->getMessage());
+		}
+		  
 	}
 
 	
@@ -367,21 +348,27 @@ class Velocity_Processor
 	}
 	
 	
-	/*
+       /*
 	* Parses the Velocity response for messages (info or error) and updates 
 	* the current transaction's information. If an HTTP error is 
 	* encountered, it will be thrown from this method.
 	* @param object $error error message created on the basis of gateway error status. 
 	* @param array $response gateway response deatil. 
 	* @return object $error error detail of gateway response.
-    * @return array $response successfull/failure response of gateway.
+        * @return array $response successfull/failure response of gateway.
 	*/
 	public function handleResponse($error, $response) {
 		if ($error) {
 			  return $this->processError($error, $response);
 		} else {
 		    if(!empty($response)) {
-			  return $response;
+				if ( isset($response['BankcardTransactionResponsePro']) ) {
+					return $response['BankcardTransactionResponsePro'];
+				} else if ( isset($response['BankcardCaptureResponse']) ) {
+					return $response['BankcardCaptureResponse'];
+				} else {
+					return $response;
+				}
 			}
 		}
 	}
@@ -393,7 +380,11 @@ class Velocity_Processor
 	* @return object $error detail created on the basis of gateway error status.
 	*/
 	public function processError($error, $response) {
-
+		if ( isset($response) )
+			return $response;
+		else
+			return $error;
+		
 		$reson = isset($response['ErrorResponse']['Reason']) ? $response['ErrorResponse']['Reason'] : 'ERR';
 		$validationErrors = isset($response['ErrorResponse']['ValidationErrors']) ? $response['ErrorResponse']['ValidationErrors'] : 'ERR';
 		$rulemsg = isset($response['ErrorResponse']['ValidationErrors']['ValidationError']['RuleMessage']) ? $response['ErrorResponse']['ValidationErrors']['ValidationError']['RuleMessage'] : '';

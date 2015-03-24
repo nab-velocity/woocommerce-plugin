@@ -77,7 +77,8 @@ class Velocity_Connection
 														'method' => 'SignOn'
 													)
 												 ); 
-			if ( $error == NULL && $response != '' )        
+			if ( $error == NULL && $response != '' )
+			          
 				return $response;
 			else
 				throw new Exception( Velocity_Message::$descriptions['errsignon'] );
@@ -169,9 +170,8 @@ class Velocity_Connection
 			$expected_response = "200";
 		
 		$res = curl_exec($ch);
-		
-		list($header, $body) = explode("\r\n\r\n", $res, 2);
-			
+
+		list($header, $body) = explode("\r\n\r\n", $res, 2);			
 		$statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		curl_close($ch);
 		
@@ -195,7 +195,7 @@ class Velocity_Connection
 		   preg_match('/Content-Type: ([^;]*);/i', $header, $match);
 		   $contentType = $match[1];
 		}
-
+		
 		// Parse response, depending on value of the Content-Type header.
 		$response = null;
 		if (preg_match('/json/', $contentType)) {

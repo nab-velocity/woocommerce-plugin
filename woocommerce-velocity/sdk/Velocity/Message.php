@@ -36,7 +36,7 @@ class Velocity_Message
 	// capture
 	'errcapsesswfltransid' => 'for capture sessiontoken, workflowid and/or transaction id are not set!',
 	'errcaptransidamount' => 'transaction id and/or amount not set!',
-	'errcapxml' => 'Some value not set in xml for capture!',
+	'errcapxml' => 'Some values are not set in xml for capture!',
 	// adjust
 	'erradjustsesswfltransid' => 'for adjust sessiontoken, workflowid and/or transaction id are not set!',
 	'errverauthcappath' => 'verify or authorize or authorizeandcapture request path not set proper!',
@@ -47,14 +47,16 @@ class Velocity_Message
 	'errauthncapxml' => 'authorizeandcapture reqest xml object is null!',
 	'erraurhncapavswflid' => 'PaymentAccountDataToken, avsdata and/or workflowid are not set!',
 	// undo
-	'errundotransid' => 'transaction id is in undo request not set!',
+	'errundotransid' => 'transaction id in undo request not set!',
 	'errundoxml' => 'Some value not set in xml for undo!',
 	'errundosesswfltransid' => 'for undo sessiontoken, workflowid and/or transaction id are not set!',
 	// returnbyid
-	'errreturndataarray' => 'transaction id and/or not in returnById request!',
+	'errreturndataarray' => 'transaction id not in returnById request!',
 	'errreturnncapxml' => 'Some value not set in xml for returnById!',
 	'errreturntranidwid' => 'for returnbyId sessiontoken, workflowid and/or transaction id are not set!',
 	'errreturnunlinkedamnt' => 'for returnunlinked sessiontoken, workflowid and/or transaction id are not set!',
 	'errreturnundataarray' => 'transaction id and/or not in returnunlinked request!',
+	'erramtnotset' => 'Amount must be set!',
+	'errcarddatatokennotset' => 'Either CardData or PaymentToken must be set!',
   );
 }
