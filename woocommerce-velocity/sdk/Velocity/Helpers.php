@@ -1,6 +1,6 @@
 <?php
 
-class Velocity_Helpers{
+class VelocityHelpers{
 
 	private function __construct() {}
 	private function __clone() {}
