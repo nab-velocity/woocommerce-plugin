@@ -75,7 +75,11 @@ function woocommerce_velocity_init() {
 			}
 			
 		}
-		
+		function my_admin_error_notice() {
+                        $class = "error";
+                        $message = "Error in saving";
+                        echo"<div class=\"$class\"> <p>$message</p></div>"; 
+                }
 		/* 
 		 * This method call if admin enter ammount manual and request for payment.
 		 * @param float $refund_ammount request ammount for refund.
@@ -90,9 +94,10 @@ function woocommerce_velocity_init() {
 			
 			// create SDK object to call the all SDK methods and genrate the sessiontoken.
 			try {
-				$obj_transaction = new Velocity_Processor($this->applicationprofileid, $this->merchantprofileid, $this->workflowid, $this->isTestAccount, $this->identitytoken, null);
+				$obj_transaction = new VelocityProcessor($this->applicationprofileid, $this->merchantprofileid, $this->workflowid, $this->isTestAccount, $this->identitytoken, null);
 			} catch(Exception $e) {
-				throw new Exception($e->getMessage());
+                                    print_r($e->getMessage());
+                                    return;
 			}
 			
 			try {
@@ -139,16 +144,11 @@ function woocommerce_velocity_init() {
 					
 				} else { 
                                     // returnbyid transaction failed from gateway then shows this message.
-                                    if (isset ($res_returnbyid['ErrorResponse']['ValidationErrors']['ValidationError']['RuleMessage']))
-                                        throw new Exception($res_returnbyid['ErrorResponse']['ValidationErrors']['ValidationError']['RuleMessage']);
-                                    else if (isset($res_returnbyid['ErrorResponse']['Reason'])) 
-                                        throw new Exception($res_returnbyid['ErrorResponse']['Reason']);
-                                    else
-                                        throw new Exception('Transaction Failed please contact!, to site admin');
+                                            print_r($res_returnbyid);
 				}
 				
 			} catch(Exception $ex) {
-				throw new Exception($ex->getMessage());
+				print_r($ex->getMessage());
 			}
 		
 		}
@@ -314,9 +314,12 @@ function woocommerce_velocity_init() {
 			// create SDK object to call the all SDK methods and genrate the sessiontoken.
 			
 			try {
-				$obj_transaction = new Velocity_Processor( $this->applicationprofileid, $this->merchantprofileid, $this->workflowid, $this->isTestAccount, $this->identitytoken, null);
+				$obj_transaction = new VelocityProcessor( $this->applicationprofileid, $this->merchantprofileid, $this->workflowid, $this->isTestAccount, $this->identitytoken, null);
 			} catch(Exception $e) {
-				throw new Exception($e->getMessage());
+                                if(strcmp($e->getMessage(), 'An invalid security token was provided') == 0)
+                                    throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 8124');
+				else
+                                    throw new Exception($e->getMessage());
 			} 
 			
 			try {
@@ -330,7 +333,7 @@ function woocommerce_velocity_init() {
                                                                                                 'order_id' => $order_id
                                                                                                 )
                                                                                         );
-
+                                //var_dump($res_authandcap);die;
 				global $wpdb;
                                 $velocity_transaction_table = $wpdb->prefix . 'velocity_transaction'; // table name which is use to save the transaction data. 
 				
@@ -393,8 +396,16 @@ function woocommerce_velocity_init() {
                                         throw new Exception($res_authandcap['ErrorResponse']['ValidationErrors']['ValidationError']['RuleMessage']);
                                     else if (isset($res_authandcap['ErrorResponse']['Reason'])) 
                                         throw new Exception($res_authandcap['ErrorResponse']['Reason']);
-                                    else
-					throw new Exception('Transaction Failed please contact!, to site admin');
+                                    else {
+                                        if (strcmp(trim($res_authandcap) , 'ApplicationProfileId is not valid.<br>') == 0)
+                                            throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 1010');
+					else if (strip_tags(strstr($res_authandcap , $this->workflowid)) == $this->workflowid)
+                                            throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 9621');   
+                                        else if (strlen($res_authandcap) == 702) 
+                                            throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 2408');
+                                        else
+                                            throw new Exception($res_authandcap);
+                                    }    
 				}
 			} catch (Exception $ex) {
 				throw new Exception($ex->getMessage());

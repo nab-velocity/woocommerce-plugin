@@ -1,10 +1,10 @@
 <?php
 
 /* 
- * The `Velocity_Connection` class is responsible for making requests to 
+ * The `VelocityConnection` class is responsible for making requests to 
  * the Velocity API and parsing the returned response.
  */
-class Velocity_Connection 
+class VelocityConnection 
 {
 	private static $instance;
 	
@@ -29,7 +29,7 @@ class Velocity_Connection
 		if (isset($path) && isset($data)) {	
 			return $this->request('GET', $path, $data);
 		} else {	
-			throw new Exception($data['method'].':'.Velocity_Message::$descriptions['errgetmethod']);
+			throw new Exception(VelocityMessage::$descriptions['errgetmethod']);
 		}
 	}
 
@@ -44,7 +44,7 @@ class Velocity_Connection
 		if (isset($path) && isset($data)) {
 			return $this->request('POST', $path, $data);
 		} else {
-			throw new Exception($data['method'].':'.Velocity_Message::$descriptions['errpostmethod']);
+			throw new Exception(VelocityMessage::$descriptions['errpostmethod']);
 		}
 	}
 
@@ -59,7 +59,7 @@ class Velocity_Connection
 		if (isset($path) && isset($data)) { 
 			return $this->request('PUT', $path, $data);
 		} else {
-			throw new Exception($data['method'].':'.Velocity_Message::$descriptions['errputmethod']);
+			throw new Exception(VelocityMessage::$descriptions['errputmethod']);
 		}
 	}
 
@@ -71,17 +71,18 @@ class Velocity_Connection
 		try { 
 														
 			list($error, $response) = $this->get('SvcInfo/token', 
-													array(
-														'sessiontoken' => Velocity_Processor::$identitytoken, 
-														'xml' => '', 
-														'method' => 'SignOn'
-													)
-												 ); 
+                                                                            array(
+                                                                                    'sessiontoken' => VelocityProcessor::$identitytoken, 
+                                                                                    'xml' => '', 
+                                                                                    'method' => 'SignOn'
+                                                                            )
+                                                                         );
+                        
 			if ( $error == NULL && $response != '' )
 			          
 				return $response;
 			else
-				throw new Exception( Velocity_Message::$descriptions['errsignon'] );
+				throw new Exception( VelocityMessage::$descriptions['errsignon'] );
 		} catch (Exception $e) {
 			throw new Exception( $e->getMessage() );
 		}
@@ -102,16 +103,16 @@ class Velocity_Connection
 			$body = $data['xml'];	
 			$session_token = $data['sessiontoken'];
 			$rest_action = $method;
-			if ( Velocity_Processor::$isTestAccount ) {
-				$api_url = Velocity_Config::$baseurl_test . $path;
+			if ( VelocityProcessor::$isTestAccount ) {
+				$api_url = VelocityConfig::$baseurl_test . $path;
 			} else {
-				$api_url = Velocity_Config::$baseurl_live . $path;
+				$api_url = VelocityConfig::$baseurl_live . $path;
 			}
 			$timeout = 60;
 		} else {
-			throw new Exception($data['method'].':'.Velocity_Message::$descriptions['errsessionxmlnotset']);
+			throw new Exception(VelocityMessage::$descriptions['errsessionxmlnotset']);
 		}
-		
+
 		$user_agent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)";
 		
 		// Parse the full api_url for required pieces. 
@@ -137,7 +138,7 @@ class Velocity_Connection
 		// Header setup		
 		$header[] = 'Authorization: Basic '. base64_encode($session_token.':');
 		
-		if($data['method'] == 'SignOn')
+		if($data['method'] == 'SignOn' || $data['method'] == 'querytransactionsdetail')
 			$header[] = 'Content-Type: application/json';
 		else
 			$header[] = 'Content-Type: application/xml';
@@ -169,16 +170,20 @@ class Velocity_Connection
 		else
 			$expected_response = "200";
 		
-		$res = curl_exec($ch);
+                try {
+                    
+                    $res = curl_exec($ch);
 
-		list($header, $body) = explode("\r\n\r\n", $res, 2);			
-		$statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		curl_close($ch);
-		
-		/* if ( $data['method'] == 'SignOn' && $body != '' )
-			return $body; */
-		
-		if ( $statusCode == 5000 ) {  // regenrate the sessiontoken if expired.
+                    list($header, $body) = explode("\r\n\r\n", $res, 2);
+
+                    $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+                } catch (Exception $ex) {
+                    curl_close($ch);
+                    echo $ex->getMessage();
+                }
+    
+                if ( $statusCode == 5000 ) {  // regenrate the sessiontoken if expired.
 		
 			$data['sessiontoken'] = $this->signOn();
 			$this->request($method, $path, $data);
@@ -186,6 +191,7 @@ class Velocity_Connection
 		} else {
 			$error = self::errorFromStatus($statusCode); // call exception classes according to error code.
 		}
+                
 		$match = null;
 		preg_match('/Content-Type: ([^;]*);/i', $body, $match);
 		$contentType;
@@ -195,7 +201,13 @@ class Velocity_Connection
 		   preg_match('/Content-Type: ([^;]*);/i', $header, $match);
 		   $contentType = $match[1];
 		}
-		
+                
+                if($data['method'] == 'querytransactionsdetail'){
+                    $res = explode('Path=/', $body);
+                    $body = $res[1];
+                    if($res[1] == '')
+                        $body = $res[0];
+                }
 		// Parse response, depending on value of the Content-Type header.
 		$response = null;
 		if (preg_match('/json/', $contentType)) {
@@ -203,9 +215,9 @@ class Velocity_Connection
 		} elseif (preg_match('/xml/', $contentType)) {
 		    $arr = explode('Path=/', $body);
 			if(isset($arr[1]))
-			   $response = Velocity_XmlParser::parse($arr[1]);
+			   $response = VelocityXmlParser::parse($arr[1]);
 			else
-			   $response = Velocity_XmlParser::parse($body);
+			   $response = VelocityXmlParser::parse($body);
 		}
 
 		return array($error, $response);
@@ -213,7 +225,7 @@ class Velocity_Connection
 	}
 	
 	/*
-     * Returns an error object, corresponding to the HTTP status code returned by Velocity.
+         * Returns an error object, corresponding to the HTTP status code returned by Velocity.
 	 * @param int $status error code.
 	 * @return object (null/Exception child class object) this is error detail of gateway response. 
 	 */
@@ -225,67 +237,67 @@ class Velocity_Connection
 			case '201': 
 				return null;
 			case '207': 
-				return new Velocity_CWSFault();
+				return new VelocityCWSFault();
 			case '208': 
-				return new Velocity_CWSInvalidOperationFault();
+				return new VelocityCWSInvalidOperationFault();
 			case '225': 
-				return new Velocity_CWSValidationResultFault();
+				return new VelocityCWSValidationResultFault();
 			case '306': 
-				return new Velocity_CWSInvalidMessageFormatFault();
+				return new VelocityCWSInvalidMessageFormatFault();
 			case '312': 
-				return new Velocity_CWSDeserializationFault();
+				return new VelocityCWSDeserializationFault();
 			case '313': 
-				return new Velocity_CWSExtendedDataNotSupportedFault();
+				return new VelocityCWSExtendedDataNotSupportedFault();
 			case '314': 
-				return new Velocity_CWSInvalidServiceConfigFault();
+				return new VelocityCWSInvalidServiceConfigFault();
 			case '317': 
-				return new Velocity_CWSOperationNotSupportedFault();
+				return new VelocityCWSOperationNotSupportedFault();
 			case '318': 
-				return new Velocity_CWSTransactionFailedFault();
+				return new VelocityCWSTransactionFailedFault();
 			case '327': 
-				return new Velocity_CWSTransactionAlreadySettledFault();
+				return new VelocityCWSTransactionAlreadySettledFault();
 			case '328': 
-				return new Velocity_CWSConnectionFault();	
+				return new VelocityCWSConnectionFault();	
 			case '400':
-				return new Velocity_BadRequestError();
+				return new VelocityBadRequestError();
 			case '401':
-				return new Velocity_SystemFault();
+				return new VelocitySystemFault();
 			case '406':
-				return new Velocity_AuthenticationFault();
+				return new VelocityAuthenticationFault();
 			case '412':
-				return new Velocity_STSUnavailableFault();
+				return new VelocitySTSUnavailableFault();
 			case '413':
-				return new Velocity_AuthorizationFault();
+				return new VelocityAuthorizationFault();
 			case '415':
-				return new Velocity_ClaimNotFoundFault();
+				return new VelocityClaimNotFoundFault();
 			case '416':
-				return new Velocity_AccessClaimNotFoundFault();
+				return new VelocityAccessClaimNotFoundFault();
 			case '420':
-				return new Velocity_DuplicateClaimFault();
+				return new VelocityDuplicateClaimFault();
 			case '421':
-				return new Velocity_DuplicateUserFault();
+				return new VelocityDuplicateUserFault();
 			case '422':
-				return new Velocity_ClaimTypeNotAllowedFault();
+				return new VelocityClaimTypeNotAllowedFault();
 			case '423':
-				return new Velocity_ClaimSecurityDomainMismatchFault();
+				return new VelocityClaimSecurityDomainMismatchFault();
 			case '424':
-				return new Velocity_ClaimPropertyValidationFault();
+				return new VelocityClaimPropertyValidationFault();
 			case '450':
-				return new Velocity_RelyingPartyNotAssociatedToSecurityDomainFault();
+				return new VelocityRelyingPartyNotAssociatedToSecurityDomainFault();
 			case '404':
-				return new Velocity_NotFoundError();	
+				return new VelocityNotFoundError();	
 			case '500': 
-				return new Velocity_InternalServerError();
+				return new VelocityInternalServerError();
 			case '503': 
-				return new Velocity_ServiceUnavailableError();
+				return new VelocityServiceUnavailableError();
 			case '504': 
-				return new Velocity_GatewayTimeoutError();
+				return new VelocityGatewayTimeoutError();
             case '5005': 
-				return new Velocity_InvalidTokenFault();
+				return new VelocityInvalidTokenFault();
 			case '9999': 
-				return new Velocity_CWSTransactionServiceUnavailableFault();	
+				return new VelocityCWSTransactionServiceUnavailableFault();	
 			default: 
-				return new Velocity_UnexpectedError('Unexpected HTTP response: ' . $status);
+				return new VelocityUnexpectedError('Unexpected HTTP response: ' . $status);
 		}
 	}
 	

@@ -1,62 +1,48 @@
 <?php
 
-class Velocity_Message
+class VelocityMessage
 {
   public function __construct(){
   }
 
   public static $descriptions = array(
-    'errtransparentjs' => 'Post data is not set from transparent redirect.',
-	'errsessionxmlnotset' => 'Before curl request session and/or xml not set!',
-	'errcredentialnotset' => 'Error one or credential not like applicationid, merchantprofileid etc.',
-	'errpostmethod' => 'Error in path and/or data array in post method.',
-	'errgetmethod' => 'Error in path and/or data array in get method.',
-	'errputmethod' => 'Error in path and/or data array in put method.',
-	'errattributearrnotset' => 'attributes array returned from authorize response is not set!',
-	'errunknown' => 'unknown error in response data!',
-	'errsignon' => 'invalid identity token',
-	'errmrchtid' => 'Invalid MerchantProfileid',
+  
+    'errtransparentjs' => 'Due to some technical issue, Security validation failed',
+	'errsessionxmlnotset' => 'Authentication failed due to session token not get form gateways',
+	'errpostmethod' => 'Requestet url of gateway is not valid.',
+	'errgetmethod' => 'Requested url of gateway is not valid.',
+	'errputmethod' => 'Requested url of gateway is not valid.',
+	'errunknown' => 'some unknown technical issue.',
+	'errsignon' => 'An invalid security token was provided',
+	'errmrchtid' => 'Invalid merchant credential',
 	'errpannum' => 'Invalid credit card number',
 	'errexpire' => 'Invalid expiry month and/or year',
 	'errcvdata' => 'Invalid CVV data',
-	'errunknown' => 'some unknown error',
-	'erstatecode' => 'Invalid state code or sevice not available or some unknown error',
-	// verify
-	'errverfsesstoken' => 'session token is not set for verify request!',
-	'errverfavswflid' => 'PaymentAccountDataToken and/or workflowid are not set!',
-	'errverfattraray' => 'After authorization attribute array is not!',
-	'errverftrandata' => 'transaction data array not set for verify request',
-	'errverfxml' => 'Some value not set in xml for verify!',
-	// authorize
-	'errauthsesstoken' => 'session token is not set for authorize request!',
-	'erraurhavswflid' => 'PaymentAccountDataToken and/or workflowid are not set!',
-	'erraurhattraray' => 'After authorization attribute array is not!',
-	'errauthtrandata' => 'transaction data array not set for authorize request',
-	'errauthxml' => 'Some value not set in xml for authorize!',
+	'erstatecode' => 'Invalid state code or gateway service not available or some unknown error',
+	
 	// capture
-	'errcapsesswfltransid' => 'for capture sessiontoken, workflowid and/or transaction id are not set!',
-	'errcaptransidamount' => 'transaction id and/or amount not set!',
-	'errcapxml' => 'Some values are not set in xml for capture!',
+	'errcapsesswfltransid' => 'Authentication failed due to Security token not validate',
+	'errcaptransidamount' => 'Invalid Transaction id for Settlement',
+	
 	// adjust
-	'erradjustsesswfltransid' => 'for adjust sessiontoken, workflowid and/or transaction id are not set!',
-	'errverauthcappath' => 'verify or authorize or authorizeandcapture request path not set proper!',
-	'erradjtransidamount' => 'adjust request transaction id and/or amount not set!',
-	'erradjxml' => 'Some value not set in xml for adjust!',
-	// authorizeandcapture
-	'errauthncapdataarray' => 'authorizeandcapture data array not set!',
-	'errauthncapxml' => 'authorizeandcapture reqest xml object is null!',
-	'erraurhncapavswflid' => 'PaymentAccountDataToken, avsdata and/or workflowid are not set!',
+	'erradjustsesswfltransid' => 'Adjustment failed due Security.',
+	'erradjtransidamount' => 'Adjustment failed due invalid previous transaction id and/or amount',
+	
 	// undo
-	'errundotransid' => 'transaction id in undo request not set!',
-	'errundoxml' => 'Some value not set in xml for undo!',
-	'errundosesswfltransid' => 'for undo sessiontoken, workflowid and/or transaction id are not set!',
+	'errundotransid' => 'Transaction failed due to security.',
+	'errundosesswfltransid' => 'Authentication failed due to Security token not validate',
+	
 	// returnbyid
-	'errreturndataarray' => 'transaction id not in returnById request!',
-	'errreturnncapxml' => 'Some value not set in xml for returnById!',
-	'errreturntranidwid' => 'for returnbyId sessiontoken, workflowid and/or transaction id are not set!',
-	'errreturnunlinkedamnt' => 'for returnunlinked sessiontoken, workflowid and/or transaction id are not set!',
-	'errreturnundataarray' => 'transaction id and/or not in returnunlinked request!',
+	'errreturndataarray' => 'Transaction failed due to security.',
+	'errreturntranidwid' => 'Authentication failed due to Security token not validate',
 	'erramtnotset' => 'Amount must be set!',
-	'errcarddatatokennotset' => 'Either CardData or PaymentToken must be set!',
+	'errcarddatatokennotset' => 'Invalid card detail.',
+      
+        // querytransactiondetail
+        'errqtdtctp' => 'Error in TransactionClass or TransactionType.',
+        'errqtp' => 'Error in transaction parameters.',
+        'errpp' => 'Error in transaction parameters.',
+        'errqtd' => 'Error in query transaction detail.',
+        'errqtpdaterange' => 'Error in date range setting or format may not support.'
   );
 }

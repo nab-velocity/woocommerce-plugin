@@ -1,6 +1,6 @@
 <?php
 
-class Velocity_XmlParser {
+class VelocityXmlParser {
 
 	private function __construct() {}
 	private function __clone() {}

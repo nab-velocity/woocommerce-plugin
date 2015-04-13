@@ -1,5 +1,5 @@
 <?php
-class Velocity_Error extends Exception
+class VelocityError extends Exception
 {
 	public function __construct($message, $name) {
 		parent::__construct($message);
@@ -8,7 +8,7 @@ class Velocity_Error extends Exception
 }
 
 # 207
-class Velocity_CWSFault extends Velocity_Error
+class VelocityCWSFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('General CWS fault', 'CWSFault');
@@ -16,7 +16,7 @@ class Velocity_CWSFault extends Velocity_Error
 }
 
 # 208
-class Velocity_CWSInvalidOperationFault extends Velocity_Error
+class VelocityCWSInvalidOperationFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Invalid operation is being attempted', 'CWSInvalidOperationFault');
@@ -24,7 +24,7 @@ class Velocity_CWSInvalidOperationFault extends Velocity_Error
 }
 
 # 225
-class Velocity_CWSValidationResultFault extends Velocity_Error
+class VelocityCWSValidationResultFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Xml validation Errors', 'CWSValidationResultFault');
@@ -32,7 +32,7 @@ class Velocity_CWSValidationResultFault extends Velocity_Error
 }
 
 # 306
-class Velocity_CWSInvalidMessageFormatFault extends Velocity_Error
+class VelocityCWSInvalidMessageFormatFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Invalid Message Format', 'CWSInvalidMessageFormatFault');
@@ -40,7 +40,7 @@ class Velocity_CWSInvalidMessageFormatFault extends Velocity_Error
 }
 
 # 312
-class Velocity_CWSDeserializationFault extends Velocity_Error
+class VelocityCWSDeserializationFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Deserialization not Successfull', 'CWSDeserializationFault');
@@ -48,7 +48,7 @@ class Velocity_CWSDeserializationFault extends Velocity_Error
 }
 
 # 313
-class Velocity_CWSExtendedDataNotSupportedFault extends Velocity_Error
+class VelocityCWSExtendedDataNotSupportedFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Manage Billing Data Not Supported', 'CWSExtendedDataNotSupportedFault');
@@ -56,7 +56,7 @@ class Velocity_CWSExtendedDataNotSupportedFault extends Velocity_Error
 }
 
 # 314
-class Velocity_CWSInvalidServiceConfigFault extends Velocity_Error
+class VelocityCWSInvalidServiceConfigFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Invalid Service Configuration', 'CWSInvalidServiceConfigFault');
@@ -64,7 +64,7 @@ class Velocity_CWSInvalidServiceConfigFault extends Velocity_Error
 }
 
 # 317
-class Velocity_CWSOperationNotSupportedFault extends Velocity_Error
+class VelocityCWSOperationNotSupportedFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Operation Not Supported', 'CWSOperationNotSupportedFault');
@@ -72,7 +72,7 @@ class Velocity_CWSOperationNotSupportedFault extends Velocity_Error
 }
 
 # 318
-class Velocity_CWSTransactionFailedFault extends Velocity_Error
+class VelocityCWSTransactionFailedFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Transaction Failed', 'CWSTransactionFailedFault');
@@ -80,7 +80,7 @@ class Velocity_CWSTransactionFailedFault extends Velocity_Error
 }
 
 # 327
-class Velocity_CWSTransactionAlreadySettledFault extends Velocity_Error
+class VelocityCWSTransactionAlreadySettledFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Transaction Already Settled', 'CWSTransactionAlreadySettledFault');
@@ -88,7 +88,7 @@ class Velocity_CWSTransactionAlreadySettledFault extends Velocity_Error
 }
 
 # 328
-class Velocity_CWSConnectionFault extends Velocity_Error
+class VelocityCWSConnectionFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Connection Failure', 'CWSConnectionFault');
@@ -96,7 +96,7 @@ class Velocity_CWSConnectionFault extends Velocity_Error
 }
 
 # 400
-class Velocity_BadRequestError extends Velocity_Error
+class VelocityBadRequestError extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Bad Request', 'badRequestError');
@@ -104,7 +104,7 @@ class Velocity_BadRequestError extends Velocity_Error
 }
 
 # 401
-class Velocity_SystemFault extends Velocity_Error
+class VelocitySystemFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('System problem', 'SystemFault');
@@ -112,7 +112,7 @@ class Velocity_SystemFault extends Velocity_Error
 }
 
 # 406
-class Velocity_AuthenticationFault extends Velocity_Error
+class VelocityAuthenticationFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Authentication Failure', 'AuthenticationFault');
@@ -120,7 +120,7 @@ class Velocity_AuthenticationFault extends Velocity_Error
 }
 
 # 412
-class Velocity_STSUnavailableFault extends Velocity_Error
+class VelocitySTSUnavailableFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Security Token Service is unavailable', 'STSUnavailableFault');
@@ -128,7 +128,7 @@ class Velocity_STSUnavailableFault extends Velocity_Error
 }
 
 # 413
-class Velocity_AuthorizationFault extends Velocity_Error
+class VelocityAuthorizationFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Authorization Failure', '_AuthorizationFault');
@@ -136,7 +136,7 @@ class Velocity_AuthorizationFault extends Velocity_Error
 }
 
 # 415
-class Velocity_ClaimNotFoundFault extends Velocity_Error
+class VelocityClaimNotFoundFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Claim Not Found', 'ClaimNotFoundFault');
@@ -144,7 +144,7 @@ class Velocity_ClaimNotFoundFault extends Velocity_Error
 }
 
 # 416
-class Velocity_AccessClaimNotFoundFault extends Velocity_Error
+class VelocityAccessClaimNotFoundFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Access Claim Not Found', 'AccessClaimNotFoundFault');
@@ -152,7 +152,7 @@ class Velocity_AccessClaimNotFoundFault extends Velocity_Error
 }
 
 # 420
-class Velocity_DuplicateClaimFault extends Velocity_Error
+class VelocityDuplicateClaimFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Duplicate Claim', 'DuplicateClaimFault');
@@ -160,7 +160,7 @@ class Velocity_DuplicateClaimFault extends Velocity_Error
 }
 
 # 421
-class Velocity_DuplicateUserFault extends Velocity_Error
+class VelocityDuplicateUserFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Duplicate User', 'DuplicateUserFault');
@@ -168,7 +168,7 @@ class Velocity_DuplicateUserFault extends Velocity_Error
 }
 
 # 422
-class Velocity_ClaimTypeNotAllowedFault extends Velocity_Error
+class VelocityClaimTypeNotAllowedFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Claim Type Not Allowed', 'ClaimTypeNotAllowedFault');
@@ -176,7 +176,7 @@ class Velocity_ClaimTypeNotAllowedFault extends Velocity_Error
 }
 
 # 423
-class Velocity_ClaimSecurityDomainMismatchFault extends Velocity_Error
+class VelocityClaimSecurityDomainMismatchFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Claim Security Domain Mismatch', 'ClaimSecurityDomainMismatchFault');
@@ -184,7 +184,7 @@ class Velocity_ClaimSecurityDomainMismatchFault extends Velocity_Error
 }
 
 # 424
-class Velocity_ClaimPropertyValidationFault extends Velocity_Error
+class VelocityClaimPropertyValidationFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Claim Property Validation', 'ClaimPropertyValidationFault');
@@ -192,7 +192,7 @@ class Velocity_ClaimPropertyValidationFault extends Velocity_Error
 }
 
 # 450
-class Velocity_RelyingPartyNotAssociatedToSecurityDomainFault extends Velocity_Error
+class VelocityRelyingPartyNotAssociatedToSecurityDomainFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Relying Party Not Associated To Security Domain', 'RelyingPartyNotAssociatedToSecurityDomainFault');
@@ -200,7 +200,7 @@ class Velocity_RelyingPartyNotAssociatedToSecurityDomainFault extends Velocity_E
 }
 
 # 404
-class Velocity_NotFoundError extends Velocity_Error
+class VelocityNotFoundError extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Not Forund', 'notFoundError');
@@ -208,7 +208,7 @@ class Velocity_NotFoundError extends Velocity_Error
 }
 
 # 500
-class Velocity_InternalServerError extends Velocity_Error
+class VelocityInternalServerError extends VelocityError
 {
 	public function __construct() {
 		parent::__construct('Internal Server Error', 'internalServerError');
@@ -216,7 +216,7 @@ class Velocity_InternalServerError extends Velocity_Error
 }
 
 # 503
-class Velocity_ServiceUnavailableError extends Velocity_Error
+class VelocityServiceUnavailableError extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Service Unavailable', 'ServiceUnavailableError');
@@ -224,7 +224,7 @@ class Velocity_ServiceUnavailableError extends Velocity_Error
 }
 
 # 504
-class Velocity_GatewayTimeoutError extends Velocity_Error
+class VelocityGatewayTimeoutError extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Gateway Time out', 'GatewayTimeoutError');
@@ -232,7 +232,7 @@ class Velocity_GatewayTimeoutError extends Velocity_Error
 }
 
 # 5005
-class Velocity_InvalidTokenFault extends Velocity_Error
+class VelocityInvalidTokenFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Invalid Token', 'InvalidTokenFault');
@@ -240,7 +240,7 @@ class Velocity_InvalidTokenFault extends Velocity_Error
 }
 
 #9999
-class Velocity_CWSTransactionServiceUnavailableFault extends Velocity_Error
+class VelocityCWSTransactionServiceUnavailableFault extends VelocityError
 {
 	public function __construct() { 
 		parent::__construct('Transaction Service Unavailable', 'CWSTransactionServiceUnavailableFault');
@@ -248,7 +248,7 @@ class Velocity_CWSTransactionServiceUnavailableFault extends Velocity_Error
 }
 
 # Everything else
-class Velocity_UnexpectedError extends Velocity_Error
+class VelocityUnexpectedError extends VelocityError
 {
 	public function __construct($message) {
 		parent::__construct($message, 'unexpectedError');
