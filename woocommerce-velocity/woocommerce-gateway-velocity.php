@@ -22,7 +22,8 @@ function woocommerce_velocity_init() {
      * Gateway class to intract with velocity gateway.
      */
 	class WC_Velocity extends WC_Payment_Gateway {
-		public function __construct(){
+            
+		public function __construct() {
 		
 			$this->id 					= 'velocity';
 			$this->method_title 		= 'Velocity';
@@ -73,13 +74,28 @@ function woocommerce_velocity_init() {
 					$this->refund_payment($refund_ammount, $transaction_id, $obj->id );
 				}
 			}
-			
+
+			?>
+
+                        <script>
+                            jQuery(document).ready(function(){
+                                jQuery('button').click(function(){
+                                    var str = jQuery('p.order_number').text();
+                                    if (str.search('Credit Card Payments') == 12) {
+                                        jQuery('.check-column').attr('type','hidden');
+                                        jQuery('.check-column>input').attr('type', 'hidden');
+                                    }
+                                });
+								jQuery('button.cancel-action').click(function(){
+									 jQuery('.check-column').attr('type','checkbox');
+                                     jQuery('.check-column>input').attr('type', 'checkbox');
+								});
+                            });
+                        </script>
+
+                        <?php
 		}
-		function my_admin_error_notice() {
-                        $class = "error";
-                        $message = "Error in saving";
-                        echo"<div class=\"$class\"> <p>$message</p></div>"; 
-                }
+		
 		/* 
 		 * This method call if admin enter ammount manual and request for payment.
 		 * @param float $refund_ammount request ammount for refund.
@@ -200,10 +216,10 @@ function woocommerce_velocity_init() {
 			);
 		}
 		
-        /**
-         * Admin Panel Options
-         * - configure the velocity payment gateway according to our need and save velocity credentials.
-         **/
+                /**
+                 * Admin Panel Options
+                 * - configure the velocity payment gateway according to our need and save velocity credentials.
+                 **/
 		public function admin_options(){
 			echo '<h3>'.__('Velocity', 'nab').'</h3>';
 			echo '<p>'.__('Redefining Payments, Simplifying Lives! Empowering any business to collect money online within minutes').'</p>';
@@ -213,10 +229,10 @@ function woocommerce_velocity_init() {
 			echo '</table>';
 		}
 
-        /**
-         *  velocity payment form field show directly on check out page
-		 *	 
-         **/
+                /**
+                 *  velocity payment form field show directly on check out page
+                         *	 
+                 **/
 		function payment_fields() {
        
 			?>			
@@ -333,7 +349,7 @@ function woocommerce_velocity_init() {
                                                                                                 'order_id' => $order_id
                                                                                                 )
                                                                                         );
-                                //var_dump($res_authandcap);die;
+                                //print_r($res_authandcap);die;
 				global $wpdb;
                                 $velocity_transaction_table = $wpdb->prefix . 'velocity_transaction'; // table name which is use to save the transaction data. 
 				
@@ -387,7 +403,7 @@ function woocommerce_velocity_init() {
 						'redirect' => $this->get_return_url( $order )
 					);
 					
-                                } else if (isset($res_authandcap['StatusCode']) && $res_authandcap['StatusCode'] == '014') {
+                                } else if (isset($res_authandcap['StatusCode']) && $res_authandcap['StatusCode'] != '000') {
                                     throw new Exception($res_authandcap['StatusMessage']);
                                 } else {
                                     
@@ -397,12 +413,17 @@ function woocommerce_velocity_init() {
                                     else if (isset($res_authandcap['ErrorResponse']['Reason'])) 
                                         throw new Exception($res_authandcap['ErrorResponse']['Reason']);
                                     else {
+
                                         if (strcmp(trim($res_authandcap) , 'ApplicationProfileId is not valid.<br>') == 0)
                                             throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 1010');
 					else if (strip_tags(strstr($res_authandcap , $this->workflowid)) == $this->workflowid)
                                             throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 9621');   
                                         else if (strlen($res_authandcap) == 702) 
                                             throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 2408');
+                                        else if ($res_authandcap == 'Validation Errors Occurred<br>The string must match the pattern "[0-9]{3,4}".<br>') 
+                                            throw new Exception('Invalid CVV data');
+                                        else if ($res_authandcap == 'Validation Errors Occurred<br>The string must match the pattern "[X0-9]{13,22}".<br>')
+                                            throw new Exception('Invalid card number');
                                         else
                                             throw new Exception($res_authandcap);
                                     }    
