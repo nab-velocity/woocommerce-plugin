@@ -22,7 +22,8 @@ function woocommerce_velocity_init() {
      * Gateway class to intract with velocity gateway.
      */
 	class WC_Velocity extends WC_Payment_Gateway {
-		public function __construct(){
+            
+		public function __construct() {
 		
 			$this->id 					= 'velocity';
 			$this->method_title 		= 'Velocity';
@@ -73,7 +74,26 @@ function woocommerce_velocity_init() {
 					$this->refund_payment($refund_ammount, $transaction_id, $obj->id );
 				}
 			}
-			
+
+			?>
+
+                        <script>
+                            jQuery(document).ready(function(){
+                                jQuery('button').click(function(){
+                                    var str = jQuery('p.order_number').text();
+                                    if (str.search('Credit Card Payments') == 12) {
+                                        jQuery('.check-column').attr('type','hidden');
+                                        jQuery('.check-column>input').attr('type', 'hidden');
+                                    }
+                                });
+								jQuery('button.cancel-action').click(function(){
+									 jQuery('.check-column').attr('type','checkbox');
+                                     jQuery('.check-column>input').attr('type', 'checkbox');
+								});
+                            });
+                        </script>
+
+                        <?php
 		}
 		
 		/* 
@@ -196,10 +216,10 @@ function woocommerce_velocity_init() {
 			);
 		}
 		
-        /**
-         * Admin Panel Options
-         * - configure the velocity payment gateway according to our need and save velocity credentials.
-         **/
+                /**
+                 * Admin Panel Options
+                 * - configure the velocity payment gateway according to our need and save velocity credentials.
+                 **/
 		public function admin_options(){
 			echo '<h3>'.__('Velocity', 'nab').'</h3>';
 			echo '<p>'.__('Redefining Payments, Simplifying Lives! Empowering any business to collect money online within minutes').'</p>';
@@ -209,10 +229,10 @@ function woocommerce_velocity_init() {
 			echo '</table>';
 		}
 
-        /**
-         *  velocity payment form field show directly on check out page
-		 *	 
-         **/
+                /**
+                 *  velocity payment form field show directly on check out page
+                         *	 
+                 **/
 		function payment_fields() {
        
 			?>			
@@ -383,7 +403,7 @@ function woocommerce_velocity_init() {
 						'redirect' => $this->get_return_url( $order )
 					);
 					
-                                } else if (isset($res_authandcap['StatusCode']) && $res_authandcap['StatusCode'] == '014' || $res_authandcap['StatusCode'] == '054') {
+                                } else if (isset($res_authandcap['StatusCode']) && $res_authandcap['StatusCode'] != '000') {
                                     throw new Exception($res_authandcap['StatusMessage']);
                                 } else {
                                     
