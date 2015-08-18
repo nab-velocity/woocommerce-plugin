@@ -34,4 +34,4 @@
 
     v)	And Must be save two filed "IdentityToken", “WorkFlowId/ServiceId" "ApplicationprofileId" & "MerchantProfileId”  provided by velocity. 
 
-5) We are save the row request and respnose object in <prefix>_velocity_transaction table.
+5) We have saved the raw request and response objects in <prefix>_velocity_transaction table.
