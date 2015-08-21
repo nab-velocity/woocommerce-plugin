@@ -86,7 +86,7 @@ class VelocityProcessor
 			$xml = VelocityXmlCreator::authorizeandcaptureXML($options);  // got authorizeandcapture xml object. 
 			$xml->formatOutput = TRUE;
 			$body = $xml->saveXML();
-			//echo '<xmp>'.$body.'</xmp>';
+			//echo '<xmp>'.$body.'</xmp>'; die;
 			list($error, $response) = $this->connection->post(
                                                                             $this->path(
                                                                                     self::$workflowid, 
