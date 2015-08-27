@@ -46,6 +46,7 @@ class VelocityXmlCreator {
 	}	
 		
 	public static function transaction_XML($xml, $root, $data) {
+            
 		if (empty($data['amount'])) {
 			throw new Exception(VelocityMessage::$descriptions['erramtnotset']);	
 		}else{
@@ -55,23 +56,7 @@ class VelocityXmlCreator {
 		if (empty($data['token']) && empty($data['carddata']) && empty($data['p2pedata']) ) {
 			throw new Exception(VelocityMessage::$descriptions['errcarddatatokennotset']);	
 		}
-		
-		if ( empty($data['entry_mode']) && (isset($data['carddata']['pan']) || isset($data['token'])) )  {
-			$data['entry_mode'] = 'Keyed';
-		}
-		
-		if ( empty($data['entry_mode']) && isset($data['carddata']['track2data']) )  {
-			$data['entry_mode'] = 'TrackDataFromMSR';
-		}
-                if ( empty($data['entry_mode']) && isset($data['p2pedata']['EncryptionKeyId'] ) )  {
-			$data['entry_mode'] = 'TrackDataFromMSR';
-                        $data['IndustryType'] = 'Retail';
-                        $data['Reference'] = 'xyt';
-                        $data['EmployeeId'] = '11';
-                } else {
-                    $data['IndustryType'] = 'Ecommerce';
-                }
-			
+	
 		$n = $xml->createElement("ApplicationProfileId");
 		$idText = $xml->createTextNode(VelocityProcessor::$applicationprofileid);
 		$n->appendChild($idText);
@@ -97,7 +82,6 @@ class VelocityXmlCreator {
 			if(isset($data['billingdata']['address'])) { 
 				$n3 = $xml->createElement("ns2:Address");
 				$n2->appendChild($n3);
-		
 				VelocityXmlCreator::populate_XML_element_if_array_value_isset('street', "ns2:Street1", $xml, $n3, $data['billingdata']['address']);
 				VelocityXmlCreator::populate_XML_element_if_array_value_isset('Street2', "ns2:Street2", $xml, $n3, $data['billingdata']['address']);
 				VelocityXmlCreator::populate_XML_element_if_array_value_isset('City', "ns2:City", $xml, $n3, $data['billingdata']['address']);
@@ -109,7 +93,6 @@ class VelocityXmlCreator {
 			VelocityXmlCreator::populate_XML_element_if_array_value_isset('phone', "ns2:Phone", $xml, $n1, $data['billingdata']);
 			VelocityXmlCreator::populate_XML_element_if_array_value_isset('fax', "ns2:Fax", $xml, $n1, $data['billingdata']);
 			VelocityXmlCreator::populate_XML_element_if_array_value_isset('email', "ns2:Email", $xml, $n1, $data['billingdata']);
-
 			VelocityXmlCreator::populate_XML_element_if_array_value_isset('customer_id', "ns2:CustomerId", $xml, $n1, $data);
 			VelocityXmlCreator::populate_XML_element_if_array_value_isset('customer_tax_id', "ns2:CustomerTaxId", $xml, $n1, $data);
 		}
@@ -138,10 +121,13 @@ class VelocityXmlCreator {
 			$n2 = $xml->createElement("bcp:CardData");
 			$n1->appendChild($n2);
 			VelocityXmlCreator::populate_XML_element_if_array_value_isset('cardtype', "bcp:CardType", $xml, $n2, $data['carddata']);
-			VelocityXmlCreator::populate_XML_element_if_array_value_isset('pan', "bcp:PAN", $xml, $n2, $data['carddata']);
-			VelocityXmlCreator::populate_XML_element_if_array_value_isset('expire', "bcp:Expire", $xml, $n2, $data['carddata']);;
-			VelocityXmlCreator::populate_XML_element_if_array_value_isset('track1data', "bcp:Track1Data", $xml, $n2, $data['carddata']);
-			VelocityXmlCreator::populate_XML_element_if_array_value_isset('track2data', "bcp:Track2Data", $xml, $n2, $data['carddata']);		
+                        if( $data['carddata']['track1data'] != '' || $data['carddata']['track2data'] != '') {
+                            VelocityXmlCreator::populate_XML_element_if_array_value_isset('track1data', "bcp:Track1Data", $xml, $n2, $data['carddata']);
+                            VelocityXmlCreator::populate_XML_element_if_array_value_isset('track2data', "bcp:Track2Data", $xml, $n2, $data['carddata']);
+                        } else {
+                            VelocityXmlCreator::populate_XML_element_if_array_value_isset('pan', "bcp:PAN", $xml, $n2, $data['carddata']);
+                            VelocityXmlCreator::populate_XML_element_if_array_value_isset('expire', "bcp:Expire", $xml, $n2, $data['carddata']);
+                        }    
 		}
 
 		if (isset($data['avsdata']) || (isset($data['carddata']) && isset($data['cvdata']['cvv']))){
@@ -169,12 +155,15 @@ class VelocityXmlCreator {
 			} 
 			
 			if (isset($data['carddata']) && isset($data['carddata']['cvv'])) {
+                            
+                            if( $data['carddata']['track1data'] == '' && $data['carddata']['track2data'] == '') {
 				$n3 = $xml->createElement("bcp:CVDataProvided");
 				$idText = $xml->createTextNode('Provided');
 				$n3->appendChild($idText);
 				$n2->appendChild($n3);
 				
 				VelocityXmlCreator::populate_XML_element_if_array_value_isset('cvv', "bcp:CVData", $xml, $n2, $data['carddata']);
+                            }    
 			}
 		}
 
