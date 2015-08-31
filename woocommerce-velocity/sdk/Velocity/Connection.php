@@ -179,7 +179,7 @@ class VelocityConnection
                     curl_close($ch);
                 } catch (Exception $ex) {
                     curl_close($ch);
-                    echo $ex->getMessage();
+                    throw new Exception($ex->getMessage());
                 }
     
                 if ( $statusCode == 5000 ) {  // regenrate the sessiontoken if expired.

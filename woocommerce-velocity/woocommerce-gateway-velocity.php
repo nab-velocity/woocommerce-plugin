@@ -78,7 +78,6 @@ function woocommerce_velocity_init() {
                             $this->refund_payment($refund_ammount, $transaction_id, $obj->id );
                     }
             }
-
         }  
         
         /* 
@@ -416,7 +415,7 @@ function woocommerce_velocity_init() {
                         array( 
                                 'id'                 => '', 
                                 'transaction_id'     => $transaction_id,
-                                'transaction_status' =>  $transaction_status,
+                                'transaction_status' => $transaction_status,
                                 'order_id'           => $order_id,
                                 'request_obj'        => $obj_req,
                                 'response_obj'       => $obj_res
@@ -434,12 +433,12 @@ function woocommerce_velocity_init() {
                     }
 
                     // here check the version of WooCommerce
-                    if (version_compare( WOOCOMMERCE_VERSION, '2.1.0', '>=')) {
+                    if (version_compare(WOOCOMMERCE_VERSION, '2.1.0', '>=')) {
                         /* 2.1.0 */
-                        $checkout_payment_url = $order->get_checkout_payment_url( true );
+                        $checkout_payment_url = $order->get_checkout_payment_url(true);
                     } else {
                         /* 2.0.0 */
-                        $checkout_payment_url = get_permalink( get_option ( 'woocommerce_pay_page_id' ) );
+                        $checkout_payment_url = get_permalink(get_option('woocommerce_pay_page_id'));
                     }
 
                     // retuen the data with current status.
@@ -514,7 +513,7 @@ function velocity_install() {
     }
 
     // table structure define here.
-    $sql = "CREATE TABLE IF NOT EXISTS $velocity_transaction_table (
+    $sql = "CREATE TABLE $velocity_transaction_table (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         transaction_id varchar(220) DEFAULT '' NOT NULL,
         transaction_status varchar(100) DEFAULT '' NOT NULL,
