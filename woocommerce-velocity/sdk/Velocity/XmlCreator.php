@@ -157,7 +157,7 @@ class VelocityXmlCreator {
 
                 if (isset($data['carddata']) && isset($data['carddata']['cvv'])) {
 
-                    if( !isset($data['carddata']['track1data']) && !isset($data['carddata']['track1data']) || $data['carddata']['track1data'] == '' && $data['carddata']['track2data'] == '' ) {
+                    if ((!isset($data['carddata']['track1data']) || $data['carddata']['track1data'] == '') && (!isset($data['carddata']['track2data']) || $data['carddata']['track2data'] == '')) {
                         $n3 = $xml->createElement("bcp:CVDataProvided");
                         $idText = $xml->createTextNode('Provided');
                         $n3->appendChild($idText);
