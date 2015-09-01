@@ -333,7 +333,7 @@ function woocommerce_velocity_init() {
          * throw error message on failure of payment.
          **/
         function process_payment($order_id) { 
-
+            
             // collect the data for payment by PHP SDK.
             global $woocommerce;
             $order    = new WC_Order( $order_id );
