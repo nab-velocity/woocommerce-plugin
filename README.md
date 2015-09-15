@@ -3,7 +3,7 @@
 
 
 
-1)	Download velocity WooCommerce Plugin, zipped file from velocity gateways.
+1)	Download velocity WooCommerce Plugin by clicking on Download zip button on the right bottom of this page.
 
 2)	Configuration Requirement: Wordpress site with WooCommerce Version 2.2.0 or above version must be installed. 
 
