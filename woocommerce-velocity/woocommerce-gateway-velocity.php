@@ -270,7 +270,7 @@ function woocommerce_velocity_init() {
             <div id="result"></div>
             <div>
                 <label class="lbs">Card holder name</label>
-                <input id="card_holder_name" class="txt" size="30" type="text" value="ashish" name="card_owner" />
+                <input id="card_holder_name" class="txt" size="30" type="text" value="" name="card_owner" />
             </div>
             <div>
                 <label class="lbs">Card Type</label>
@@ -283,11 +283,11 @@ function woocommerce_velocity_init() {
             </div>
             <div>
                 <label class="lbs">Credit Card Number: </label>
-                <input id="cc-number" type="text" maxlength="16" class="txt" autocomplete="off" value="4012888812348882" autofocus name="cardnumber" />
+                <input id="cc-number" type="text" maxlength="16" class="txt" autocomplete="off" value="" autofocus name="cardnumber" />
             </div>
             <div>
                 <label class="lbs">CVC: </label>
-                <input id="cc-cvc" type="text" maxlength="4" class="txt" autocomplete="off" value="123" name="cvvnumber" />
+                <input id="cc-cvc" type="text" maxlength="4" class="txt" autocomplete="off" value="" name="cvvnumber" />
             </div>
             <div>
                 <label class="lbs">Expiry Date: </label>
