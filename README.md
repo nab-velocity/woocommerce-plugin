@@ -1,11 +1,9 @@
 
-                Velocity WooCommerce Plugin Installation Documentation
-
-
+Velocity WooCommerce Plugin Installation Documentation
 
 1)	Download velocity WooCommerce Plugin by clicking on Download zip button on the right bottom of this page.
 
-2)	Configuration Requirement: Wordpress site with WooCommerce Version 2.2.0 or above version must be installed. 
+2)	Configuration Requirement: Wordpress site with WooCommerce from 2.2.0 to 2.2.11 version must be installed. 
 
 
 3)  Installation of Plugin from Admin Panel:
