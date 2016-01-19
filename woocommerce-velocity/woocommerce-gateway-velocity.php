@@ -33,12 +33,12 @@ function woocommerce_velocity_init() {
             
             $this->init_form_fields();
             $this->init_settings();
-            $this->title 	      = $this->settings['title'];
+            $this->title 	        = $this->settings['title'];
             $this->identitytoken        = $this->settings['identitytoken'];
-            $this->workflowid 	    = $this->settings['workflowid']; // workflowid / serviceid default unique provided by velocity
+            $this->workflowid 	        = $this->settings['workflowid']; // workflowid / serviceid default unique provided by velocity
             $this->applicationprofileid = $this->settings['applicationprofileid'];          
             $this->merchantprofileid    = $this->settings['merchantprofileId']; // merchant profile id unique provided by velocity
-            $this->description 	    = $this->settings['description'];
+            $this->description 	        = $this->settings['description'];
             
             if ($this->settings['testmode'] == "yes") // work for test mode.
                 $this->isTestAccount = true; // this for test url.
@@ -327,17 +327,16 @@ function woocommerce_velocity_init() {
          * throw error message on failure of payment.
          **/
         function process_payment($order_id) { 
-            
             // collect the data for payment by PHP SDK.
             global $woocommerce;
             $order    = new WC_Order( $order_id );
             $user     = wp_get_current_user();
-            $address  = get_user_meta($user->ID, 'billing_address_1', true);
-            $city     = get_user_meta($user->ID, 'billing_city', true);
-            $state    = get_user_meta($user->ID, 'billing_state', true);
-            $postcode = get_user_meta($user->ID, 'billing_postcode', true);
-            $country  = get_user_meta($user->ID, 'billing_country', true);
-            $phone    = get_user_meta($user->ID, 'billing_phone', true);
+            $address  = $_POST['billing_address_1'] . ' ' . $_POST['billing_address_2'];
+            $city     = $_POST['billing_city'];
+            $state    = $_POST['billing_state'];
+            $postcode = $_POST['billing_postcode'];
+            $country  = $_POST['billing_country'];
+            $phone    = $_POST['billing_phone'];
             $total    = $woocommerce->cart->total;
 
             // create the avsdata array for pass in SDK method.
@@ -360,101 +359,139 @@ function woocommerce_velocity_init() {
             } 
 
             try {
+            
+                $response = $obj_transaction->verify(array(  
+                        'amount'       => $total,
+                        'avsdata'      => $avsData, 
+                        'carddata'     => $cardData,
+                        'entry_mode'   => 'Keyed',
+                        'IndustryType' => 'Ecommerce',
+                        'Reference'    => 'xyz',
+                        'EmployeeId'   => '11'
+                ));
 
-                $res_authandcap = $obj_transaction->authorizeAndCapture( array(
-                                                                                'amount'     => $total, 
-                                                                                'token'      => NULL, 
-                                                                                'avsdata'    => $avsData, 
-                                                                                'carddata'   => $cardData, 
-                                                                                'invoice_no' => '',
-                                                                                'order_id'   => $order_id
+            } catch (Exception $e) {
+                throw new Exception($e->getMessage());
+            }
+        
+            try {
+
+                if (is_array($response) && isset($response['Status']) && $response['Status'] == 'Successful') {
+                    
+                    $res_authandcap = $obj_transaction->authorizeAndCapture( array(
+                                                                                'amount'       => $total, 
+                                                                                'avsdata'      => $avsData,
+                                                                                'token'        => $response['PaymentAccountDataToken'], 
+                                                                                'order_id'     => $order_id,
+                                                                                'entry_mode'   => 'Keyed',
+                                                                                'IndustryType' => 'Ecommerce',
+                                                                                'Reference'    => 'xyz',
+                                                                                'EmployeeId'   => '11'
                                                                                 )
-                                                                        );
-                //print_r($res_authandcap);die;
-                global $wpdb;
-                $velocity_transaction_table = $wpdb->prefix . 'velocity_transaction'; // table name which is use to save the transaction data. 
+                                                                            );
+                    
+                    global $wpdb;
+                    $velocity_transaction_table = $wpdb->prefix . 'velocity_transaction'; // table name which is use to save the transaction data. 
 
-                if (is_array($res_authandcap) && isset($res_authandcap['StatusCode']) && $res_authandcap['StatusCode'] == '000' ) { // check the transaction success or failure.
+                    if (is_array($res_authandcap) && isset($res_authandcap['StatusCode']) && $res_authandcap['StatusCode'] == '000' ) { // check the transaction success or failure.
 
-                    try {
-                        $xml = VelocityXmlCreator::authorizeandcaptureXML( array(
-                                                                            'amount'     => $total, 
-                                                                            'token'      => NULL, 
-                                                                            'avsdata'    => $avsData, 
-                                                                            'carddata'   => $cardData, 
-                                                                            'invoice_no' => '',
-                                                                            'order_id'   => $order_id
-                                                                            )                                         
-                                                                  );  // got authorizeandcapture xml object. 
+                        try {
+                            $xml = VelocityXmlCreator::authorizeandcaptureXML( array(
+                                                                                'amount'       => $total, 
+                                                                                'token'        => $response['PaymentAccountDataToken'], 
+                                                                                'avsdata'      => $avsData, 
+                                                                                'order_id'     => $order_id,
+                                                                                'entry_mode'   => 'Keyed',
+                                                                                'IndustryType' => 'Ecommerce',
+                                                                                'Reference'    => 'xyz',
+                                                                                'EmployeeId'   => '11'
+                                                                                )                                         
+                                                                            );  // got authorizeandcapture xml object. 
 
-                        $req = $xml->saveXML();
-                        $obj_req = serialize($req);
+                            $req = $xml->saveXML();
+                            $obj_req = serialize($req);
 
-                    } catch (Exception $e) {
-                        throw new Exception($e->getMessage());
-                    }
+                        } catch (Exception $e) {
+                            throw new Exception($e->getMessage());
+                        }
 
-                    $transaction_id     = $res_authandcap['TransactionId'];
-                    $transaction_status = $res_authandcap['TransactionState'];
-                    $obj_res            = serialize($res_authandcap);
+                        $transaction_id     = $res_authandcap['TransactionId'];
+                        $transaction_status = $res_authandcap['TransactionState'];
+                        $obj_res            = serialize($res_authandcap);
 
-                    if($order->status !== 'completed') {
+                        if($order->status !== 'completed') {
 
-                        $order->payment_complete($transaction_id);
-                        $order->add_order_note('Credit Card payment successful.<br/>Velocity Trasaction ID: '.$transaction_id);
-                        $woocommerce->cart->empty_cart();
+                            $order->payment_complete($transaction_id);
+                            $order->add_order_note('Credit Card payment successful.<br/>Velocity Trasaction ID: '.$transaction_id);
+                            $woocommerce->cart->empty_cart();
 
-                        $wpdb->insert( 
-                        $velocity_transaction_table, 
-                        array( 
-                                'id'                 => '', 
-                                'transaction_id'     => $transaction_id,
-                                'transaction_status' => $transaction_status,
-                                'order_id'           => $order_id,
-                                'request_obj'        => $obj_req,
-                                'response_obj'       => $obj_res
-                        ), 
-                        array( 
-                                '%d', 
-                                '%s',
-                                '%s',
-                                '%s',
-                                '%s',
-                                '%s'		
-                        ) 
+                            $wpdb->insert( 
+                            $velocity_transaction_table, 
+                            array( 
+                                    'id'                 => '', 
+                                    'transaction_id'     => $transaction_id,
+                                    'transaction_status' => $transaction_status,
+                                    'order_id'           => $order_id,
+                                    'request_obj'        => $obj_req,
+                                    'response_obj'       => $obj_res
+                            ), 
+                            array( 
+                                    '%d', 
+                                    '%s',
+                                    '%s',
+                                    '%s',
+                                    '%s',
+                                    '%s'		
+                            ) 
+                            );
+
+                        }
+
+                        // here check the version of WooCommerce
+                        if (version_compare(WOOCOMMERCE_VERSION, '2.1.0', '>=')) {
+                            /* 2.1.0 */
+                            $checkout_payment_url = $order->get_checkout_payment_url(true);
+                        } else {
+                            /* 2.0.0 */
+                            $checkout_payment_url = get_permalink(get_option('woocommerce_pay_page_id'));
+                        }
+
+                        // return the data with current status.
+                        return array(
+                            'result'   => 'success',
+                            'redirect' => $this->get_return_url( $order )
                         );
 
-                    }
-
-                    // here check the version of WooCommerce
-                    if (version_compare(WOOCOMMERCE_VERSION, '2.1.0', '>=')) {
-                        /* 2.1.0 */
-                        $checkout_payment_url = $order->get_checkout_payment_url(true);
+                    } else if (is_array($res_authandcap) && isset($res_authandcap['StatusCode']) && $res_authandcap['StatusCode'] != '000') {
+                        throw new Exception($res_authandcap['StatusMessage']);
+                    } else if (is_string($res_authandcap)) {
+                        if (strcmp(trim($res_authandcap) , 'ApplicationProfileId is not valid.<br>') == 0)
+                            throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 1010');
+                        else if (strip_tags(strstr($res_authandcap , $this->workflowid)) == $this->workflowid)
+                            throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 9621');   
+                        else if (strlen($res_authandcap) == 702) 
+                            throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 2408');                                        
+                        else
+                            throw new Exception($res_authandcap);
                     } else {
-                        /* 2.0.0 */
-                        $checkout_payment_url = get_permalink(get_option('woocommerce_pay_page_id'));
+                        throw new Exception('Unkown Error occurs please contact the site admin or technical team.');
                     }
-
-                    // retuen the data with current status.
-                    return array(
-                        'result'   => 'success',
-                        'redirect' => $this->get_return_url( $order )
-                    );
-
-                } else if (is_array($res_authandcap) && isset($res_authandcap['StatusCode']) && $res_authandcap['StatusCode'] != '000') {
-                    throw new Exception($res_authandcap['StatusMessage']);
-                } else if (is_string($res_authandcap)) {
-                    if (strcmp(trim($res_authandcap) , 'ApplicationProfileId is not valid.<br>') == 0)
-                        throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 1010');
-                    else if (strip_tags(strstr($res_authandcap , $this->workflowid)) == $this->workflowid)
-                        throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 9621');   
-                    else if (strlen($res_authandcap) == 702) 
-                        throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 2408');                                        
-                    else
-                        throw new Exception($res_authandcap);
+                    
+                } else if (is_array($response) &&(isset($response['Status']) && $response['Status'] != 'Successful')) {
+                        throw new Exception($response['StatusMessage']);
+                } else if (is_string($response)) {
+                        if (strcmp(trim($response) , 'ApplicationProfileId is not valid.<br>') == 0)
+                            throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 1010');
+                        else if (strip_tags(strstr($response , $this->workflowid)) == $this->workflowid)
+                            throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 9621');   
+                        else if (strlen($response) == 702) 
+                            throw new Exception('Your order cannot be completed at this time. Please contact customer care. Error Code 2408');                                        
+                        else
+                            throw new Exception($response);
                 } else {
-                    throw new Exception('Unkown Error occurs please contact the site admin or technical team.');
+                        throw new Exception('Unknown Error in verification process please contact the site admin');
                 }
+                
                 
             } catch (Exception $ex) {
                     throw new Exception($ex->getMessage());
