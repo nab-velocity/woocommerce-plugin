@@ -1,6 +1,6 @@
 <?php
 /*
-    Plugin Name: Velocity
+    Plugin Name: Velocity Payment Gateway for WooCommerce
     Plugin URI: http://nabvelocity.com
     Description: Velocity Payment Gateway for WooCommerce. Redefining Payments, Simplifying Lives! Empowering any business to collect money online within minutes that helps you sell anything. Beautifully.
     Version: 1.0.0
